@@ -10,3 +10,10 @@ def test_read_root():
     response = client.get("/")
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {"message": "Welcome to Trip Tracker!"}
+
+
+def test_health_check():
+    client = TestClient(app)
+    response = client.get("/health")
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {"status": "healthy"}

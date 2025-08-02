@@ -4,5 +4,10 @@ app = FastAPI()
 
 
 @app.get("/")
-async def read_root():
+def read_root():
     return {"message": "Welcome to Trip Tracker!"}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
