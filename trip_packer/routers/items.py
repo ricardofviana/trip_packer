@@ -1,19 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
 from trip_packer.database import get_session
-from trip_packer.models import Items
-from trip_packer.schemas import ItemCreate, ItemResponse
+from trip_packer.models import Item
+from trip_packer.schemas import ItemSchema
 
 router = APIRouter(prefix="/items", tags=["items"])
+T_Session = Annotated[Session, Depends(get_session)]
 
-@router.post("/items", response_model=ItemResponse)
-def create_item(item: ItemCreate, session: Session = Depends(get_session)):
+
+@router.post("/items", response_model=ItemSchema)
+def create_item(item: ItemSchema, session: T_Session):
     """Create a new item."""
-    # Create new item instance
-    new_item = Items(name=item.name, category=item.category)
+    new_item = Item(name=item.name, type=item.type)
 
-    # Add to session and commit
     session.add(new_item)
     session.commit()
     session.refresh(new_item)
