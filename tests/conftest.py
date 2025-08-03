@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -23,14 +25,19 @@ def client(session):
 
 @pytest.fixture
 def session():
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False},
-        poolclass=StaticPool
-    )
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     table_registry.metadata.create_all(engine)
 
     with Session(engine) as session:
         yield session
 
     table_registry.metadata.drop_all(engine)
+
+
+@pytest.fixture(autouse=True)
+def ignore_resource_warnings():
+    warnings.filterwarnings(
+        "ignore",
+        category=ResourceWarning,
+        message="unclosed.*<sqlite3.Connection.*>",
+    )
