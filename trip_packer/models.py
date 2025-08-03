@@ -38,7 +38,9 @@ class Item:
     name: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[ItemCategory] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     item_luggage: Mapped[list["ItemLuggage"]] = relationship(init=False, back_populates="item")
@@ -52,7 +54,9 @@ class Luggage:
     name: Mapped[str] = mapped_column(nullable=False)
     type: Mapped[LuggageType] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     luggage_trips: Mapped[list["LuggageTrip"]] = relationship(init=False, back_populates="luggage")
@@ -67,7 +71,9 @@ class Trip:
     start_date: Mapped[datetime]
     end_date: Mapped[datetime]
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     luggage_trips: Mapped[list["LuggageTrip"]] = relationship(init=False, back_populates="trip")
@@ -83,7 +89,9 @@ class ItemLuggage:
     status: Mapped[ItemStatus] = mapped_column(default=ItemStatus.UNPACKED)
     quantity: Mapped[int] = mapped_column(default=1)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     item: Mapped["Item"] = relationship(init=False, back_populates="item_luggage")
@@ -100,7 +108,9 @@ class LuggageTrip:
     luggage_id: Mapped[int] = mapped_column(ForeignKey("luggage.id"))
     trip_id: Mapped[int] = mapped_column(ForeignKey("trips.id"))
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
 
     # Relationships
     luggage: Mapped["Luggage"] = relationship(init=False, back_populates="luggage_trips")
