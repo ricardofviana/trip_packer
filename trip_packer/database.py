@@ -1,8 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-
-from trip_tracker.settings import Settings
+from trip_packer.settings import Settings
 
 engine = create_engine(Settings().DATABASE_URL)
 
