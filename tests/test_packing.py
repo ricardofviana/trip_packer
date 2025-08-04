@@ -1,0 +1,124 @@
+from http import HTTPStatus
+
+
+def test_get_items_in_luggage_empty(client):
+    """Test getting items from empty luggage."""
+    luggage_data = {"name": "Empty Backpack", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    response = client.get(f"/packing/luggage/{luggage_id}/items")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == []
+
+
+def test_add_item_to_luggage(client):
+    """Test adding an item to luggage."""
+    luggage_data = {"name": "Travel Backpack", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    item_data = {"name": "Laptop", "category": "ELECTRONICS"}
+    item_response = client.post("/items/", json=item_data)
+    item_id = item_response.json()["id"]
+
+    packing_data = {"item_id": item_id, "quantity": 1}
+    response = client.post(f"/packing/luggage/{luggage_id}/items", json=packing_data)
+
+    assert response.status_code == HTTPStatus.CREATED
+    data = response.json()
+    assert data["item_id"] == item_id
+    assert data["quantity"] == 1
+    assert not data["is_packed"]
+
+
+def test_get_items_in_luggage(client):
+    """Test getting items from luggage."""
+    luggage_data = {"name": "My Carry-On", "type": "CARRY_ON"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    item1_data = {"name": "Shampoo", "category": "TOILETRIES"}
+    item1_response = client.post("/items/", json=item1_data)
+    item1_id = item1_response.json()["id"]
+
+    item2_data = {"name": "Passport", "category": "DOCUMENTS"}
+    item2_response = client.post("/items/", json=item2_data)
+    item2_id = item2_response.json()["id"]
+
+    client.post(f"/packing/luggage/{luggage_id}/items", json={"item_id": item1_id, "quantity": 1})
+    client.post(f"/packing/luggage/{luggage_id}/items", json={"item_id": item2_id, "quantity": 1})
+
+    response = client.get(f"/packing/luggage/{luggage_id}/items")
+
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert len(data) == 2
+    assert {item["item_id"] for item in data} == {item1_id, item2_id}
+
+
+def test_update_item_in_luggage(client):
+    """Test updating an item in luggage."""
+    luggage_data = {"name": "Checked Bag", "type": "CHECKED_LARGE"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    item_data = {"name": "T-shirt", "category": "CLOTHING"}
+    item_response = client.post("/items/", json=item_data)
+    item_id = item_response.json()["id"]
+
+    client.post(f"/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 2})
+
+    update_data = {"quantity": 5}
+    response = client.put(f"/packing/luggage/{luggage_id}/items/{item_id}", json=update_data)
+
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert data["quantity"] == 5
+
+
+def test_remove_item_from_luggage(client):
+    """Test removing an item from luggage."""
+    luggage_data = {"name": "My Backpack", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    item_data = {"name": "Book", "category": "OTHER"}
+    item_response = client.post("/items/", json=item_data)
+    item_id = item_response.json()["id"]
+
+    client.post(f"/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 1})
+
+    response = client.delete(f"/packing/luggage/{luggage_id}/items/{item_id}")
+
+    assert response.status_code == HTTPStatus.OK
+    assert "removed" in response.json()["message"]
+
+    # Verify item is gone
+    get_response = client.get(f"/packing/luggage/{luggage_id}/items")
+    assert get_response.json() == []
+
+
+def test_update_packing_status(client):
+    """Test updating the packing status of an item."""
+    luggage_data = {"name": "Beach Bag", "type": "CARRY_ON"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    item_data = {"name": "Sunscreen", "category": "TOILETRIES"}
+    item_response = client.post("/items/", json=item_data)
+    item_id = item_response.json()["id"]
+
+    client.post(f"/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 1})
+
+    status_update = {"is_packed": True}
+    response = client.put(f"/packing/luggage/{luggage_id}/items/{item_id}/status", json=status_update)
+
+    assert response.status_code == HTTPStatus.OK
+    data = response.json()
+    assert data["is_packed"]
+
+    # Check that the status is updated when getting the item
+    get_response = client.get(f"/packing/luggage/{luggage_id}/items")
+    assert get_response.json()[0]["is_packed"]

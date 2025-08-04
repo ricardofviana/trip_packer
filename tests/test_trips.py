@@ -122,7 +122,7 @@ def test_update_nonexistent_trip(client):
 def test_delete_trip(client):
     """Test deleting a trip."""
     # Create a trip
-    trip_data = {"name": "Temporary Trip", "start_date": "2024-11-01T10:00:00", "end_date": "2024-11-05T18:00:00"}
+    trip_data = {"name": "Temporary Trip", "start_date": "2024-11-01", "end_date": "2024-11-05"}
     create_response = client.post("/trips/", json=trip_data)
     created_trip = create_response.json()
     trip_id = created_trip["id"]
@@ -215,7 +215,7 @@ def test_add_luggage_to_nonexistent_trip(client):
 def test_add_nonexistent_luggage_to_trip(client):
     """Test adding nonexistent luggage to a trip."""
     # Create a trip
-    trip_data = {"name": "Lonely Trip", "start_date": "2024-02-01T10:00:00", "end_date": "2024-02-05T18:00:00"}
+    trip_data = {"name": "Lonely Trip", "start_date": "2024-02-01", "end_date": "2024-02-05"}
     trip_response = client.post("/trips/", json=trip_data)
     trip_id = trip_response.json()["id"]
 
