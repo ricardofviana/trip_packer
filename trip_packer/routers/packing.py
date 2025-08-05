@@ -1,4 +1,4 @@
-from typing import List
+from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
@@ -14,6 +14,7 @@ from trip_packer.schemas import (
     Message,
 )
 
+T_Session = Annotated[Session, Depends(get_session)]
 router = APIRouter(prefix="/packing", tags=["packing"])
 
 
@@ -23,7 +24,7 @@ router = APIRouter(prefix="/packing", tags=["packing"])
 )
 def get_items_in_luggage(
     luggage_id: int,
-    session: Session = Depends(get_session),
+    session: T_Session,
 ):
     """Get all items in a specific luggage"""
     query = (
@@ -56,7 +57,7 @@ def get_items_in_luggage(
 def add_item_to_luggage(
     luggage_id: int,
     item_data: LuggageItemCreate,
-    session: Session = Depends(get_session),
+    session: T_Session,
 ):
     """Add an item to a specific luggage"""
     db_luggage = session.get(Luggage, luggage_id)
@@ -102,7 +103,7 @@ def update_item_in_luggage(
     luggage_id: int,
     item_id: int,
     item_data: LuggageItemUpdate,
-    session: Session = Depends(get_session),
+    session: T_Session,
 ):
     """Update an item's quantity or notes in a specific luggage"""
     query = select(ItemLuggage).where(
@@ -144,7 +145,7 @@ def update_item_in_luggage(
 def remove_item_from_luggage(
     luggage_id: int,
     item_id: int,
-    session: Session = Depends(get_session),
+    session: T_Session,
 ):
     """Remove an item from a specific luggage"""
     query = select(ItemLuggage).where(
@@ -172,7 +173,7 @@ def update_packing_status(
     luggage_id: int,
     item_id: int,
     status_data: LuggageItemStatusUpdate,
-    session: Session = Depends(get_session),
+    session: T_Session,
 ):
     """Update the packing status of an item in a specific luggage"""
     query = select(ItemLuggage).where(
