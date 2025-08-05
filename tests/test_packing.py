@@ -54,7 +54,8 @@ def test_get_items_in_luggage(client):
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
-    assert len(data) == 2
+    expected_items = 2
+    assert len(data) == expected_items
     assert {item["item_id"] for item in data} == {item1_id, item2_id}
 
 
@@ -75,7 +76,8 @@ def test_update_item_in_luggage(client):
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
-    assert data["quantity"] == 5
+    expected_quantity = 5
+    assert data["quantity"] == expected_quantity
 
 
 def test_remove_item_from_luggage(client):
@@ -122,3 +124,93 @@ def test_update_packing_status(client):
     # Check that the status is updated when getting the item
     get_response = client.get(f"/packing/luggage/{luggage_id}/items")
     assert get_response.json()[0]["is_packed"]
+
+
+def test_add_item_to_nonexistent_luggage(client):
+    """Test adding an item to nonexistent luggage."""
+    item_data = {"name": "My Item", "category": "OTHER"}
+    item_response = client.post("/items/", json=item_data)
+    item_id = item_response.json()["id"]
+
+    packing_data = {"item_id": item_id, "quantity": 1}
+    response = client.post("/packing/luggage/999/items", json=packing_data)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_add_nonexistent_item_to_luggage(client):
+    """Test adding a nonexistent item to luggage."""
+    luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    packing_data = {"item_id": 999, "quantity": 1}
+    response = client.post(f"/packing/luggage/{luggage_id}/items", json=packing_data)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_update_item_in_nonexistent_luggage(client):
+    """Test updating an item in nonexistent luggage."""
+    update_data = {"quantity": 2}
+    response = client.put("/packing/luggage/999/items/1", json=update_data)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_update_nonexistent_item_in_luggage(client):
+    """Test updating a nonexistent item in luggage."""
+    luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    update_data = {"quantity": 2}
+    response = client.put(f"/packing/luggage/{luggage_id}/items/999", json=update_data)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_remove_item_from_nonexistent_luggage(client):
+    """Test removing an item from nonexistent luggage."""
+    response = client.delete("/packing/luggage/999/items/1")
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_remove_nonexistent_item_from_luggage(client):
+    """Test removing a nonexistent item from luggage."""
+    luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    response = client.delete(f"/packing/luggage/{luggage_id}/items/999")
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_update_status_of_item_in_nonexistent_luggage(client):
+    """Test updating status of an item in nonexistent luggage."""
+    status_update = {"is_packed": True}
+    response = client.put("/packing/luggage/999/items/1/status", json=status_update)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
+
+
+def test_update_status_of_nonexistent_item_in_luggage(client):
+    """Test updating status of a nonexistent item in luggage."""
+    luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
+    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    status_update = {"is_packed": True}
+    response = client.put(f"/packing/luggage/{luggage_id}/items/999/status", json=status_update)
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "not found" in response.json()["detail"]
