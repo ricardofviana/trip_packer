@@ -2,7 +2,8 @@ from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from trip_packer.database import get_session
 from trip_packer.models import Item, ItemLuggage, ItemStatus, Luggage
@@ -14,7 +15,7 @@ from trip_packer.schemas import (
     Message,
 )
 
-T_Session = Annotated[Session, Depends(get_session)]
+T_Session = Annotated[AsyncSession, Depends(get_session)]
 router = APIRouter(prefix="/packing", tags=["packing"])
 
 
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/packing", tags=["packing"])
     "/luggage/{luggage_id}/items",
     response_model=List[LuggageItemResponse],
 )
-def get_items_in_luggage(
+async def get_items_in_luggage(
     luggage_id: int,
     session: T_Session,
 ):
@@ -31,8 +32,10 @@ def get_items_in_luggage(
         select(ItemLuggage)
         .join(Item)
         .where(ItemLuggage.luggage_id == luggage_id)
+        .options(selectinload(ItemLuggage.item))
     )
-    items_in_luggage = session.execute(query).scalars().all()
+    result = await session.execute(query)
+    items_in_luggage = result.scalars().all()
 
     return [
         LuggageItemResponse(
@@ -54,20 +57,20 @@ def get_items_in_luggage(
     response_model=LuggageItemResponse,
     status_code=status.HTTP_201_CREATED,
 )
-def add_item_to_luggage(
+async def add_item_to_luggage(
     luggage_id: int,
     item_data: LuggageItemCreate,
     session: T_Session,
 ):
     """Add an item to a specific luggage"""
-    db_luggage = session.get(Luggage, luggage_id)
+    db_luggage = await session.get(Luggage, luggage_id)
     if not db_luggage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Luggage with id {luggage_id} not found",
         )
 
-    db_item = session.get(Item, item_data.item_id)
+    db_item = await session.get(Item, item_data.item_id)
     if not db_item:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -80,8 +83,8 @@ def add_item_to_luggage(
         quantity=item_data.quantity,
     )
     session.add(db_item_luggage)
-    session.commit()
-    session.refresh(db_item_luggage)
+    await session.commit()
+    await session.refresh(db_item_luggage)
 
     return LuggageItemResponse(
         item_id=db_item.id,
@@ -99,17 +102,16 @@ def add_item_to_luggage(
     "/luggage/{luggage_id}/items/{item_id}",
     response_model=LuggageItemResponse,
 )
-def update_item_in_luggage(
+async def update_item_in_luggage(
     luggage_id: int,
     item_id: int,
     item_data: LuggageItemUpdate,
     session: T_Session,
 ):
     """Update an item's quantity or notes in a specific luggage"""
-    query = select(ItemLuggage).where(
-        ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id
-    )
-    db_item_luggage = session.execute(query).scalar_one_or_none()
+    query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
+    result = await session.execute(query)
+    db_item_luggage = result.scalar_one_or_none()
 
     if not db_item_luggage:
         raise HTTPException(
@@ -121,10 +123,10 @@ def update_item_in_luggage(
         db_item_luggage.quantity = item_data.quantity
 
     session.add(db_item_luggage)
-    session.commit()
-    session.refresh(db_item_luggage)
+    await session.commit()
+    await session.refresh(db_item_luggage)
 
-    db_item = session.get(Item, item_id)
+    db_item = await session.get(Item, item_id)
 
     return LuggageItemResponse(
         item_id=db_item.id,
@@ -142,16 +144,15 @@ def update_item_in_luggage(
     "/luggage/{luggage_id}/items/{item_id}",
     response_model=Message,
 )
-def remove_item_from_luggage(
+async def remove_item_from_luggage(
     luggage_id: int,
     item_id: int,
     session: T_Session,
 ):
     """Remove an item from a specific luggage"""
-    query = select(ItemLuggage).where(
-        ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id
-    )
-    db_item_luggage = session.execute(query).scalar_one_or_none()
+    query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
+    result = await session.execute(query)
+    db_item_luggage = result.scalar_one_or_none()
 
     if not db_item_luggage:
         raise HTTPException(
@@ -159,8 +160,8 @@ def remove_item_from_luggage(
             detail="Item not found in this luggage",
         )
 
-    session.delete(db_item_luggage)
-    session.commit()
+    await session.delete(db_item_luggage)
+    await session.commit()
 
     return {"message": "Item removed from luggage successfully"}
 
@@ -169,17 +170,16 @@ def remove_item_from_luggage(
     "/luggage/{luggage_id}/items/{item_id}/status",
     response_model=LuggageItemResponse,
 )
-def update_packing_status(
+async def update_packing_status(
     luggage_id: int,
     item_id: int,
     status_data: LuggageItemStatusUpdate,
     session: T_Session,
 ):
     """Update the packing status of an item in a specific luggage"""
-    query = select(ItemLuggage).where(
-        ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id
-    )
-    db_item_luggage = session.execute(query).scalar_one_or_none()
+    query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
+    result = await session.execute(query)
+    db_item_luggage = result.scalar_one_or_none()
 
     if not db_item_luggage:
         raise HTTPException(
@@ -187,15 +187,13 @@ def update_packing_status(
             detail="Item not found in this luggage",
         )
 
-    db_item_luggage.status = (
-        ItemStatus.PACKED if status_data.is_packed else ItemStatus.UNPACKED
-    )
+    db_item_luggage.status = ItemStatus.PACKED if status_data.is_packed else ItemStatus.UNPACKED
 
     session.add(db_item_luggage)
-    session.commit()
-    session.refresh(db_item_luggage)
+    await session.commit()
+    await session.refresh(db_item_luggage)
 
-    db_item = session.get(Item, item_id)
+    db_item = await session.get(Item, item_id)
 
     return LuggageItemResponse(
         item_id=db_item.id,
