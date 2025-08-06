@@ -1,7 +1,10 @@
 from http import HTTPStatus
 
+import pytest
 
-def test_get_items_in_luggage_empty(client):
+
+@pytest.mark.asyncio
+async def test_get_items_in_luggage_empty(client):
     """Test getting items from empty luggage."""
     luggage_data = {"name": "Empty Backpack", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -13,7 +16,8 @@ def test_get_items_in_luggage_empty(client):
     assert response.json() == []
 
 
-def test_add_item_to_luggage(client):
+@pytest.mark.asyncio
+async def test_add_item_to_luggage(client):
     """Test adding an item to luggage."""
     luggage_data = {"name": "Travel Backpack", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -33,7 +37,8 @@ def test_add_item_to_luggage(client):
     assert not data["is_packed"]
 
 
-def test_get_items_in_luggage(client):
+@pytest.mark.asyncio
+async def test_get_items_in_luggage(client):
     """Test getting items from luggage."""
     luggage_data = {"name": "My Carry-On", "type": "CARRY_ON"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -59,7 +64,8 @@ def test_get_items_in_luggage(client):
     assert {item["item_id"] for item in data} == {item1_id, item2_id}
 
 
-def test_update_item_in_luggage(client):
+@pytest.mark.asyncio
+async def test_update_item_in_luggage(client):
     """Test updating an item in luggage."""
     luggage_data = {"name": "Checked Bag", "type": "CHECKED_LARGE"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -80,7 +86,8 @@ def test_update_item_in_luggage(client):
     assert data["quantity"] == expected_quantity
 
 
-def test_remove_item_from_luggage(client):
+@pytest.mark.asyncio
+async def test_remove_item_from_luggage(client):
     """Test removing an item from luggage."""
     luggage_data = {"name": "My Backpack", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -102,7 +109,8 @@ def test_remove_item_from_luggage(client):
     assert get_response.json() == []
 
 
-def test_update_packing_status(client):
+@pytest.mark.asyncio
+async def test_update_packing_status(client):
     """Test updating the packing status of an item."""
     luggage_data = {"name": "Beach Bag", "type": "CARRY_ON"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -126,7 +134,8 @@ def test_update_packing_status(client):
     assert get_response.json()[0]["is_packed"]
 
 
-def test_add_item_to_nonexistent_luggage(client):
+@pytest.mark.asyncio
+async def test_add_item_to_nonexistent_luggage(client):
     """Test adding an item to nonexistent luggage."""
     item_data = {"name": "My Item", "category": "OTHER"}
     item_response = client.post("/items/", json=item_data)
@@ -139,7 +148,8 @@ def test_add_item_to_nonexistent_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_add_nonexistent_item_to_luggage(client):
+@pytest.mark.asyncio
+async def test_add_nonexistent_item_to_luggage(client):
     """Test adding a nonexistent item to luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -152,7 +162,8 @@ def test_add_nonexistent_item_to_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_update_item_in_nonexistent_luggage(client):
+@pytest.mark.asyncio
+async def test_update_item_in_nonexistent_luggage(client):
     """Test updating an item in nonexistent luggage."""
     update_data = {"quantity": 2}
     response = client.put("/packing/luggage/999/items/1", json=update_data)
@@ -161,7 +172,8 @@ def test_update_item_in_nonexistent_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_update_nonexistent_item_in_luggage(client):
+@pytest.mark.asyncio
+async def test_update_nonexistent_item_in_luggage(client):
     """Test updating a nonexistent item in luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -174,7 +186,8 @@ def test_update_nonexistent_item_in_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_remove_item_from_nonexistent_luggage(client):
+@pytest.mark.asyncio
+async def test_remove_item_from_nonexistent_luggage(client):
     """Test removing an item from nonexistent luggage."""
     response = client.delete("/packing/luggage/999/items/1")
 
@@ -182,7 +195,8 @@ def test_remove_item_from_nonexistent_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_remove_nonexistent_item_from_luggage(client):
+@pytest.mark.asyncio
+async def test_remove_nonexistent_item_from_luggage(client):
     """Test removing a nonexistent item from luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)
@@ -194,7 +208,8 @@ def test_remove_nonexistent_item_from_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_update_status_of_item_in_nonexistent_luggage(client):
+@pytest.mark.asyncio
+async def test_update_status_of_item_in_nonexistent_luggage(client):
     """Test updating status of an item in nonexistent luggage."""
     status_update = {"is_packed": True}
     response = client.put("/packing/luggage/999/items/1/status", json=status_update)
@@ -203,7 +218,8 @@ def test_update_status_of_item_in_nonexistent_luggage(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_update_status_of_nonexistent_item_in_luggage(client):
+@pytest.mark.asyncio
+async def test_update_status_of_nonexistent_item_in_luggage(client):
     """Test updating status of a nonexistent item in luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
     luggage_response = client.post("/luggage/", json=luggage_data)

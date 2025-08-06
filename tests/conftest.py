@@ -1,10 +1,8 @@
-import warnings
-
 import pytest
+import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from testcontainers.postgres import PostgresContainer
 
 from trip_packer.app import app
 from trip_packer.database import get_session
@@ -13,31 +11,30 @@ from trip_packer.models import table_registry
 
 @pytest.fixture
 def client(session):
-    def get_session_overide():
+    def get_session_override():
         return session
 
     with TestClient(app) as client:
-        app.dependency_overrides[get_session] = get_session_overide
+        app.dependency_overrides[get_session] = get_session_override
         yield client
 
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
-def session():
-    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool)
-    table_registry.metadata.create_all(engine)
+@pytest.fixture(scope="session")
+def engine():
+    with PostgresContainer("postgres:17", driver="psycopg") as postgres:
+        _engine = create_async_engine(postgres.get_connection_url())
+        yield _engine
 
-    with Session(engine) as session:
+
+@pytest_asyncio.fixture
+async def session(engine):
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.create_all)
+
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         yield session
 
-    table_registry.metadata.drop_all(engine)
-
-
-@pytest.fixture(autouse=True)
-def ignore_resource_warnings():
-    warnings.filterwarnings(
-        "ignore",
-        category=ResourceWarning,
-        message="unclosed.*<sqlite3.Connection.*>",
-    )
+    async with engine.begin() as conn:
+        await conn.run_sync(table_registry.metadata.drop_all)
