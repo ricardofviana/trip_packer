@@ -35,7 +35,7 @@ class Item:
     __tablename__ = "items"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     category: Mapped[ItemCategory] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
@@ -49,7 +49,7 @@ class Luggage:
     __tablename__ = "luggage"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     type: Mapped[LuggageType] = mapped_column(nullable=False)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
@@ -63,7 +63,7 @@ class Trip:
     __tablename__ = "trips"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False, unique=True)
     start_date: Mapped[datetime]
     end_date: Mapped[datetime]
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())

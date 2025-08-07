@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from trip_packer.database import get_session
@@ -18,7 +19,15 @@ async def create_luggage(luggage: LuggageCreate, session: T_Session):
     new_luggage = Luggage(name=luggage.name, type=luggage.type)
 
     session.add(new_luggage)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A luggage with this name already exists",
+        )
+
     await session.refresh(new_luggage)
 
     return new_luggage

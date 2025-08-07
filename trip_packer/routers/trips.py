@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from trip_packer.database import get_session
@@ -18,7 +19,15 @@ async def create_trip(trip: TripCreate, session: T_Session):
     new_trip = Trip(name=trip.name, start_date=trip.start_date, end_date=trip.end_date)
 
     session.add(new_trip)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A trip with this name already exists",
+        )
+
     await session.refresh(new_trip)
 
     return new_trip

@@ -16,6 +16,15 @@ def test_create_item(client):
     assert "updated_at" in data
 
 
+def test_create_duplicate_item(client):
+    """Test creating an item with a duplicate name."""
+    item_data = {"name": "Test Item", "category": "CLOTHING"}
+    client.post("/items/", json=item_data)
+    response = client.post("/items/", json=item_data)
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
 def test_get_items(client):
     """Test getting all items."""
     expected_items = 2

@@ -16,6 +16,15 @@ def test_create_luggage(client):
     assert "updated_at" in data
 
 
+def test_create_duplicate_luggage(client):
+    """Test creating a luggage with a duplicate name."""
+    luggage_data = {"name": "Weekend Backpack", "type": "BACKPACK"}
+    client.post("/luggage/", json=luggage_data)
+    response = client.post("/luggage/", json=luggage_data)
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
 def test_get_luggage(client):
     """Test getting all luggage items."""
     # Create test luggage items
