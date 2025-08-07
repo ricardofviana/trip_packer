@@ -1,38 +1,120 @@
-## Why I built this project
+# 🚀 Trip Packer - Luggage Management System
 
-I have a confession to make: I'm one of those people who *always* forgets something when packing for a trip. It doesn't matter if it's a weekend getaway or a month-long vacation, something essential is inevitably left behind.
+---
 
-Of course, a simple checklist on a piece of paper or a notes app would probably solve this problem. But where's the fun in that?
+## 🎯 Why I Built This Project
 
-The real motivation behind building Trip Packer was two fold:
+I have a confession: I *always* forget something when packing for a trip — whether it's a quick weekend getaway or a month-long vacation. Essential items somehow slip through the cracks every time.
 
-1.  **To put my skills to the test:** I wanted to apply the concepts and techniques I learned in the [FastAPI do Zero](https://fastapidozero.dunossauro.com/estavel/) course in a real-world project. This application is my playground for everything I've learned.
+While a simple checklist or notes app could help, I wanted a **structured, interactive solution** tailored to my needs.
 
-2.  **To create a project template:** I wanted to build a well-structured and reusable project that I can use as a template for future applications. This allows me to quickly bootstrap new ideas and experiment with different technologies without starting from scratch every time.
+**Trip Packer** was born from two main goals:
 
-So, while Trip Packer solves a personal pain point, it'''s also a learning tool and a foundation for future projects.
+1. **Skill Application:** To apply concepts from the [FastAPI do Zero](https://fastapidozero.dunossauro.com/estavel/) course in a real-world project.
+2. **Reusable Template:** To build a well-structured full-stack app combining a FastAPI backend with a React frontend — a solid foundation for future projects.
 
-## Project Description
+---
 
-Trip Packer is a web application designed to help you plan and organize your packing for any trip. It allows you to create trips, manage your luggage, and create a comprehensive packing list to ensure you never forget an essential item again.
+## 🗺️ Project Overview
 
-### Main Features
+Trip Packer is a **full-stack web application** designed to help you plan and organize your packing efficiently. It provides a clear overview of:
 
-*   **Trip Management:** Create, update, and delete trips.
-*   **Luggage Organization:** Add and manage different types of luggage for your trips.
-*   **Packing Lists:** Create detailed packing lists for each trip, ensuring you have everything you need.
+- What’s packed
+- What’s still unpacked
+- What needs to be purchased
 
-### Technologies Used
+Say goodbye to last-minute packing stress!
 
-*   **Backend:**
-    *   [FastAPI](https://fastapi.tiangolo.com/): A modern, fast (high-performance), web framework for building APIs with Python 3.8+ based on standard Python type hints.
-    *   [SQLAlchemy](https://www.sqlalchemy.org/): The Python SQL toolkit and Object Relational Mapper that gives application developers the full power and flexibility of SQL.
-    *   [Alembic](https://alembic.sqlalchemy.org/en/latest/): A lightweight database migration tool for usage with the SQLAlchemy Database Toolkit for Python.
-    *   [Pydantic](https://pydantic-docs.helpmanual.io/): Data validation and settings management using python type annotations.
-    *   [PostgreSQL](https://www.postgresql.org/): A powerful, open source object-relational database system.
-*   **Testing:**
-    *   [Pytest](https://docs.pytest.org/en/7.1.x/): A framework that makes it easy to write small, readable tests, and can scale to support complex functional testing for applications and libraries.
-    *   [Testcontainers](https://testcontainers-python.readthedocs.io/en/latest/): A Python library that provides a friendly API to run Docker containers. It'''s designed to be used in tests to create a clean, isolated environment for your tests.
-*   **Linting and Formatting:**
-    *   [Ruff](https://github.com/astral-sh/ruff): An extremely fast Python linter, written in Rust.
+---
 
+## 📦 Core Entities
+
+The system is built around three main resources:
+
+| Entity   | Description                          | Key Fields                                  |
+| -------- | ---------------------------------- | -------------------------------------------|
+| **Trip** | Represents a user’s journey        | `id`, `name`, `start_date`, `end_date`    |
+| **Luggage (Bag)** | Represents a piece of luggage within a trip | `id`, `name`, `trip_id`                     |
+| **Item** | Represents an article to be packed | `id`, `name`, `quantity`, `status`, `luggage_id` |
+
+---
+
+## ⚙️ Functional Features
+
+### Trip Management
+- Create, view, update, and delete trips.
+- View detailed trip info including duration and day names.
+
+### Luggage Management
+- Add, view, update, and delete luggage within trips.
+- Properly handle items when luggage is deleted.
+
+### Item Management & Packing Workflow
+- Add items to luggage with specified quantity.
+- Update item details and status (`UNPACKED`, `PACKED`, `TO_BUY`).
+- Move items between luggage within the same trip.
+- Delete items.
+
+### Pre-Trip Review
+- Retrieve a structured overview of packing status per trip.
+- Filter items by status to quickly identify unpacked or to-buy items.
+
+---
+
+## 🖥️ Frontend Technology Stack
+
+- **Framework:** React
+- **Build Tool:** Vite
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Testing:** Vitest
+- **Component Development & Documentation:** Storybook
+- **Code Quality:** ESLint, Prettier
+- **Git Hooks:** Husky for pre-commit checks
+
+### Frontend Highlights
+- Consumes FastAPI backend via RESTful JSON APIs.
+- Intuitive UI for managing trips, luggage, and items.
+- Mobile-friendly and accessible design.
+- Components developed and documented in Storybook.
+- Automated tests with Vitest.
+- Enforced code style and quality with ESLint, Prettier, and Husky.
+
+---
+
+## 🛠️ Backend Technology Stack
+
+- **Framework:** FastAPI (Python)
+- **Database:** Relational DB (SQLite by default) managed with SQLAlchemy and Alembic
+- **API Design:** RESTful JSON APIs
+- **Testing:** Pytest with Testcontainers for isolated testing
+- **Linting:** Ruff for Python code quality
+
+---
+
+## 📈 Non-Functional Requirements
+
+- Fast and smooth frontend performance.
+- Comprehensive backend and frontend test coverage.
+- No authentication in V1; planned for future versions.
+- Code quality enforcement on both frontend and backend.
+
+---
+
+## 🔮 Future Considerations (Out of Scope for V1)
+
+- User authentication and authorization.
+- Packing list templates for different trip types.
+- Sharing packing lists with other users.
+- Weight estimation for luggage.
+- Advanced analytics or AI-based packing suggestions.
+
+---
+
+## 🚀 Getting Started
+
+Please refer to the project documentation for setup instructions, API details, and frontend usage.
+
+---
+
+Thank you for checking out **Trip Packer**! This project is both a personal tool and a learning platform — I hope it helps you pack smarter and stress less. ✈️🎒
