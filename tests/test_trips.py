@@ -17,6 +17,15 @@ def test_create_trip(client):
     assert "updated_at" in data
 
 
+def test_create_duplicate_trip(client):
+    """Test creating a trip with a duplicate name."""
+    trip_data = {"name": "Summer Vacation", "start_date": "2024-07-01", "end_date": "2024-07-15"}
+    client.post("/trips/", json=trip_data)
+    response = client.post("/trips/", json=trip_data)
+
+    assert response.status_code == HTTPStatus.CONFLICT
+
+
 def test_get_trips(client):
     """Test getting all trips."""
     expected_trips = 3
