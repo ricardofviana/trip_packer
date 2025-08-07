@@ -255,3 +255,57 @@ def test_add_duplicate_luggage_to_trip(client):
     second_response = client.post(f"/api/trips/{trip_id}/luggage/{luggage_id}")
     assert second_response.status_code == HTTPStatus.CONFLICT
     assert "already associated" in second_response.json()["detail"]
+
+
+def test_remove_luggage_from_trip(client):
+    """Test removing luggage from a trip."""
+    # Create a trip and luggage, then associate them
+    trip_data = {"name": "Trip with Luggage", "start_date": "2024-05-01", "end_date": "2024-05-05"}
+    trip_response = client.post("/api/trips/", json=trip_data)
+    trip_id = trip_response.json()["id"]
+
+    luggage_data = {"name": "Luggage to Remove", "type": "BACKPACK"}
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    client.post(f"/api/trips/{trip_id}/luggage/{luggage_id}")
+
+    # Remove luggage from trip
+    response = client.delete(f"/api/trips/{trip_id}/luggage/{luggage_id}")
+
+    assert response.status_code == HTTPStatus.OK
+    assert "removed from trip" in response.json()["message"]
+
+    # Verify luggage is no longer associated with trip
+    get_response = client.get(f"/api/trips/{trip_id}/luggage")
+    assert get_response.status_code == HTTPStatus.OK
+    assert get_response.json() == []
+
+
+def test_remove_nonexistent_luggage_from_trip(client):
+    """Test removing a nonexistent luggage from a trip."""
+    # Create a trip
+    trip_data = {"name": "Trip for Nonexistent Luggage", "start_date": "2024-06-01", "end_date": "2024-06-05"}
+    trip_response = client.post("/api/trips/", json=trip_data)
+    trip_id = trip_response.json()["id"]
+
+    # Try to remove nonexistent luggage
+    response = client.delete(f"/api/trips/{trip_id}/luggage/999")
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "Luggage with id 999 is not associated with trip" in response.json()["detail"]
+
+
+def test_remove_luggage_from_nonexistent_trip(client):
+    """Test removing luggage from a nonexistent trip."""
+    # Create luggage
+    luggage_data = {"name": "Orphan Luggage 2", "type": "CARRY_ON"}
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
+    luggage_id = luggage_response.json()["id"]
+
+    # Try to remove luggage from nonexistent trip
+    response = client.delete(f"/api/trips/999/luggage/{luggage_id}")
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert "Luggage with id" in response.json()["detail"]
+    assert "is not associated with trip" in response.json()["detail"]
