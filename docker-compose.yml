@@ -17,6 +17,11 @@ services:
       - "5432:5432"
     networks:
       - trip_packer_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app_user -d app_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   trip_packer_app:
     image: trip_packer_app
@@ -26,7 +31,8 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - trip_packer_database
+      trip_packer_database:
+        condition: service_healthy
     environment:
       DATABASE_URL: postgresql+psycopg://app_user:app_password@trip_packer_database:5432/app_db
     entrypoint: ./entrypoint.sh
@@ -38,7 +44,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "5173:5173"
     depends_on:
       - trip_packer_app
     networks:
