@@ -1,24 +1,26 @@
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from trip_packer.routers import items, luggage, packing, trips
 
 app = FastAPI()
 
-origins = ["http://localhost:3000"]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(items.router)
-app.include_router(luggage.router)
-app.include_router(trips.router)
-app.include_router(packing.router)
+api_router = APIRouter(prefix="/api")
+
+api_router.include_router(items.router)
+api_router.include_router(luggage.router)
+api_router.include_router(trips.router)
+api_router.include_router(packing.router)
+
+app.include_router(api_router)
 
 
 @app.get("/")

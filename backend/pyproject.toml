@@ -5,7 +5,6 @@ description = ""
 authors = [
     {name = "Ricardo Viana",email = "ric_fv@msn.com"}
 ]
-readme = "README.md"
 requires-python = ">=3.13,<4.0"
 dependencies = [
     "alembic (>=1.16.2,<2.0.0)",

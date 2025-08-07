@@ -1,5 +1,9 @@
 version: '3.8'
 
+networks:
+  trip_packer_network:
+    driver: bridge
+
 services:
   trip_packer_database:
     image: postgres
@@ -11,6 +15,8 @@ services:
       POSTGRES_PASSWORD: app_password
     ports:
       - "5432:5432"
+    networks:
+      - trip_packer_network
 
   trip_packer_app:
     image: trip_packer_app
@@ -24,19 +30,19 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://app_user:app_password@trip_packer_database:5432/app_db
     entrypoint: ./entrypoint.sh
+    networks:
+      - trip_packer_network
 
   trip_packer_frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "80:80"
     depends_on:
       - trip_packer_app
-    environment:
-      REACT_APP_BACKEND_URL: http://trip_packer_app:8000
-    # Command to start the React development server
-    command: npm start
+    networks:
+      - trip_packer_network
 
 volumes:
   pgdata:
