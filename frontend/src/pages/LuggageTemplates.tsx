@@ -9,33 +9,52 @@ import { luggageRepo, type LuggageTemplate } from "@/services/repos/luggageRepo"
 export default function LuggageTemplatesPage() {
   const [luggage, setLuggage] = useState<LuggageTemplate[]>([]);
   const [name, setName] = useState("");
+  const [editingLuggageId, setEditingLuggageId] = useState<string | null>(null);
+  const [editedName, setEditedName] = useState("");
+
+  const fetchLuggage = async () => {
+    const response = await luggageRepo.listLuggage();
+    console.log("LuggageTemplatesPage: API response data", response.data);
+    setLuggage(response.data);
+  };
 
   useEffect(() => {
     document.title = "Luggage Templates — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Manage reusable luggage templates to quickly build trips.");
-    const fetchLuggage = async () => {
-      const response = await luggageRepo.listLuggage();
-      setLuggage(response.data);
-    };
     fetchLuggage();
   }, []);
 
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
+  const canSave = useMemo(() => editedName.trim().length > 0, [editedName]);
 
   const add = async () => {
     if (!canCreate) return;
     await luggageRepo.createLuggage({ name: name.trim(), type: "" }); // Assuming type is not critical for now
     setName("");
-    const response = await luggageRepo.listLuggage();
-    setLuggage(response.data);
+    fetchLuggage();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this luggage template?")) return;
     await luggageRepo.deleteLuggage(id);
-    const response = await luggageRepo.listLuggage();
-    setLuggage(response.data);
+    fetchLuggage();
+  };
+
+  const startEditing = (lg: LuggageTemplate) => {
+    setEditingLuggageId(lg.id);
+    setEditedName(lg.name);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!canSave) return;
+    await luggageRepo.updateLuggage(id, { name: editedName.trim() });
+    setEditingLuggageId(null);
+    fetchLuggage();
+  };
+
+  const cancelEdit = () => {
+    setEditingLuggageId(null);
   };
 
   return (
@@ -58,12 +77,26 @@ export default function LuggageTemplatesPage() {
           </CardContent>
         </Card>
 
-        {luggage.map((lg) => (
+        {Array.isArray(luggage) && luggage.map((lg) => (
           <Card key={lg.id} className="relative">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{lg.name}</span>
-                <Button variant="ghost" onClick={() => remove(lg.id)}>Delete</Button>
+                {editingLuggageId === lg.id ? (
+                  <Input value={editedName} onChange={(e) => setEditedName(e.target.value)} />
+                ) : (
+                  <span>{lg.name}</span>
+                )}
+                <div className="flex gap-2">
+                  {editingLuggageId === lg.id ? (
+                    <>
+                      <Button variant="outline" onClick={() => saveEdit(lg.id)} disabled={!canSave}>Save</Button>
+                      <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                    </>
+                  ) : (
+                    <Button variant="ghost" onClick={() => startEditing(lg)}>Edit</Button>
+                  )}
+                  <Button variant="ghost" onClick={() => remove(lg.id)}>Delete</Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>

@@ -6,6 +6,11 @@ export function Navbar() {
     <nav className="bg-primary text-primary-foreground p-4">
       <ul className="flex space-x-4">
         <li>
+          <Link to="/" className={cn("hover:underline")}>
+            Home
+          </Link>
+        </li>
+        <li>
           <Link to="/trips" className={cn("hover:underline")}>
             Trips
           </Link>
@@ -18,6 +23,11 @@ export function Navbar() {
         <li>
           <Link to="/luggage" className={cn("hover:underline")}>
             Luggage
+          </Link>
+        </li>
+        <li>
+          <Link to="/learn-more" className={cn("hover:underline")}>
+            Learn More
           </Link>
         </li>
       </ul>

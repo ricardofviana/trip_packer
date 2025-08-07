@@ -10,34 +10,55 @@ export default function ItemsTemplatesPage() {
   const [items, setItems] = useState<ItemTemplate[]>([]);
   const [name, setName] = useState("");
   const [qty, setQty] = useState<number>(1);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editedName, setEditedName] = useState("");
+  const [editedQty, setEditedQty] = useState<number>(1);
+
+  const fetchItems = async () => {
+    const response = await itemsRepo.listItems();
+    console.log("ItemsTemplatesPage: API response data", response.data);
+    setItems(response.data);
+  };
 
   useEffect(() => {
     document.title = "Item Templates — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Manage reusable item templates for faster packing.");
-    const fetchItems = async () => {
-      const response = await itemsRepo.listItems();
-      setItems(response.data);
-    };
     fetchItems();
   }, []);
 
   const canCreate = useMemo(() => name.trim().length > 0 && qty > 0, [name, qty]);
+  const canSave = useMemo(() => editedName.trim().length > 0 && editedQty > 0, [editedName, editedQty]);
 
   const add = async () => {
     if (!canCreate) return;
     await itemsRepo.createItem({ name: name.trim(), category: "" }); // Assuming category is not critical for now
     setName("");
     setQty(1);
-    const response = await itemsRepo.listItems();
-    setItems(response.data);
+    fetchItems();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this template?")) return;
     await itemsRepo.deleteItem(id);
-    const response = await itemsRepo.listItems();
-    setItems(response.data);
+    fetchItems();
+  };
+
+  const startEditing = (item: ItemTemplate) => {
+    setEditingItemId(item.id);
+    setEditedName(item.name);
+    setEditedQty(item.default_quantity);
+  };
+
+  const saveEdit = async (id: string) => {
+    if (!canSave) return;
+    await itemsRepo.updateItem(id, { name: editedName.trim(), default_quantity: editedQty });
+    setEditingItemId(null);
+    fetchItems();
+  };
+
+  const cancelEdit = () => {
+    setEditingItemId(null);
   };
 
   return (
@@ -64,16 +85,37 @@ export default function ItemsTemplatesPage() {
           </CardContent>
         </Card>
 
-        {items.map((it) => (
+        {Array.isArray(items) && items.map((it) => (
           <Card key={it.id} className="relative">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{it.name}</span>
-                <Button variant="ghost" onClick={() => remove(it.id)}>Delete</Button>
+                {editingItemId === it.id ? (
+                  <Input value={editedName} onChange={(e) => setEditedName(e.target.value)} />
+                ) : (
+                  <span>{it.name}</span>
+                )}
+                <div className="flex gap-2">
+                  {editingItemId === it.id ? (
+                    <>
+                      <Button variant="outline" onClick={() => saveEdit(it.id)} disabled={!canSave}>Save</Button>
+                      <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                    </>
+                  ) : (
+                    <Button variant="ghost" onClick={() => startEditing(it)}>Edit</Button>
+                  )}
+                  <Button variant="ghost" onClick={() => remove(it.id)}>Delete</Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
+              {editingItemId === it.id ? (
+                <div className="space-y-2 text-left">
+                  <Label htmlFor="editedQty">Default quantity</Label>
+                  <Input id="editedQty" type="number" min={1} value={editedQty} onChange={(e) => setEditedQty(Number(e.target.value))} />
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
+              )}
               <Separator className="my-3" />
             </CardContent>
           </Card>
