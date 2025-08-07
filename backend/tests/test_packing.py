@@ -20,11 +20,11 @@ async def test_get_items_in_luggage_empty(client):
 async def test_add_item_to_luggage(client):
     """Test adding an item to luggage."""
     luggage_data = {"name": "Travel Backpack", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     item_data = {"name": "Laptop", "category": "ELECTRONICS"}
-    item_response = client.post("/items/", json=item_data)
+    item_response = client.post("/api/items/", json=item_data)
     item_id = item_response.json()["id"]
 
     packing_data = {"item_id": item_id, "quantity": 1}
@@ -41,15 +41,15 @@ async def test_add_item_to_luggage(client):
 async def test_get_items_in_luggage(client):
     """Test getting items from luggage."""
     luggage_data = {"name": "My Carry-On", "type": "CARRY_ON"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     item1_data = {"name": "Shampoo", "category": "TOILETRIES"}
-    item1_response = client.post("/items/", json=item1_data)
+    item1_response = client.post("/api/items/", json=item1_data)
     item1_id = item1_response.json()["id"]
 
     item2_data = {"name": "Passport", "category": "DOCUMENTS"}
-    item2_response = client.post("/items/", json=item2_data)
+    item2_response = client.post("/api/items/", json=item2_data)
     item2_id = item2_response.json()["id"]
 
     client.post(f"/api/packing/luggage/{luggage_id}/items", json={"item_id": item1_id, "quantity": 1})
@@ -68,11 +68,11 @@ async def test_get_items_in_luggage(client):
 async def test_update_item_in_luggage(client):
     """Test updating an item in luggage."""
     luggage_data = {"name": "Checked Bag", "type": "CHECKED_LARGE"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     item_data = {"name": "T-shirt", "category": "CLOTHING"}
-    item_response = client.post("/items/", json=item_data)
+    item_response = client.post("/api/items/", json=item_data)
     item_id = item_response.json()["id"]
 
     client.post(f"/api/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 2})
@@ -90,11 +90,11 @@ async def test_update_item_in_luggage(client):
 async def test_remove_item_from_luggage(client):
     """Test removing an item from luggage."""
     luggage_data = {"name": "My Backpack", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     item_data = {"name": "Book", "category": "OTHER"}
-    item_response = client.post("/items/", json=item_data)
+    item_response = client.post("/api/items/", json=item_data)
     item_id = item_response.json()["id"]
 
     client.post(f"/api/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 1})
@@ -113,11 +113,11 @@ async def test_remove_item_from_luggage(client):
 async def test_update_packing_status(client):
     """Test updating the packing status of an item."""
     luggage_data = {"name": "Beach Bag", "type": "CARRY_ON"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     item_data = {"name": "Sunscreen", "category": "TOILETRIES"}
-    item_response = client.post("/items/", json=item_data)
+    item_response = client.post("/api/items/", json=item_data)
     item_id = item_response.json()["id"]
 
     client.post(f"/api/packing/luggage/{luggage_id}/items", json={"item_id": item_id, "quantity": 1})
@@ -138,7 +138,7 @@ async def test_update_packing_status(client):
 async def test_add_item_to_nonexistent_luggage(client):
     """Test adding an item to nonexistent luggage."""
     item_data = {"name": "My Item", "category": "OTHER"}
-    item_response = client.post("/items/", json=item_data)
+    item_response = client.post("/api/items/", json=item_data)
     item_id = item_response.json()["id"]
 
     packing_data = {"item_id": item_id, "quantity": 1}
@@ -152,7 +152,7 @@ async def test_add_item_to_nonexistent_luggage(client):
 async def test_add_nonexistent_item_to_luggage(client):
     """Test adding a nonexistent item to luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     packing_data = {"item_id": 999, "quantity": 1}
@@ -176,7 +176,7 @@ async def test_update_item_in_nonexistent_luggage(client):
 async def test_update_nonexistent_item_in_luggage(client):
     """Test updating a nonexistent item in luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     update_data = {"quantity": 2}
@@ -199,7 +199,7 @@ async def test_remove_item_from_nonexistent_luggage(client):
 async def test_remove_nonexistent_item_from_luggage(client):
     """Test removing a nonexistent item from luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     response = client.delete(f"/api/packing/luggage/{luggage_id}/items/999")
@@ -222,7 +222,7 @@ async def test_update_status_of_item_in_nonexistent_luggage(client):
 async def test_update_status_of_nonexistent_item_in_luggage(client):
     """Test updating status of a nonexistent item in luggage."""
     luggage_data = {"name": "My Luggage", "type": "BACKPACK"}
-    luggage_response = client.post("/api/lugagge/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     status_update = {"is_packed": True}

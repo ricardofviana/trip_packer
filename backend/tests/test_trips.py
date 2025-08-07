@@ -189,7 +189,7 @@ def test_add_luggage_to_trip(client):
 
     # Create luggage
     luggage_data = {"name": "Travel Backpack", "type": "BACKPACK"}
-    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     # Add luggage to trip
@@ -211,7 +211,7 @@ def test_add_luggage_to_nonexistent_trip(client):
     """Test adding luggage to a trip that doesn't exist."""
     # Create luggage
     luggage_data = {"name": "Orphan Luggage", "type": "CARRY_ON"}
-    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     # Try to add luggage to nonexistent trip
@@ -244,7 +244,7 @@ def test_add_duplicate_luggage_to_trip(client):
 
     # Create luggage
     luggage_data = {"name": "Duplicate Luggage", "type": "CHECKED_MEDIUM"}
-    luggage_response = client.post("/luggage/", json=luggage_data)
+    luggage_response = client.post("/api/luggage/", json=luggage_data)
     luggage_id = luggage_response.json()["id"]
 
     # Add luggage to trip first time
