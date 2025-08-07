@@ -1,0 +1,9 @@
+---
+description: Don't open a new terminal window for each commands you need to run, keep using the same.
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- Don't open a new terminal window for each commands you need to run, keep using the same.

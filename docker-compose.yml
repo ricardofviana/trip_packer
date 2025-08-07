@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  trip_packer_database:
+    image: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: app_user
+      POSTGRES_DB: app_db
+      POSTGRES_PASSWORD: app_password
+    ports:
+      - "5432:5432"
+
+  trip_packer_app:
+    image: trip_packer_app
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - trip_packer_database
+    environment:
+      DATABASE_URL: postgresql+psycopg://app_user:app_password@trip_packer_database:5432/app_db
+    entrypoint: ./entrypoint.sh
+
+  trip_packer_frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - trip_packer_app
+    environment:
+      REACT_APP_BACKEND_URL: http://trip_packer_app:8000
+    # Command to start the React development server
+    command: npm start
+
+volumes:
+  pgdata:
