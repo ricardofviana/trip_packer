@@ -1,29 +1,35 @@
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import TripsPage from "./pages/Trips";
+import TripDetailPage from "./pages/TripDetail";
+import ItemsTemplatesPage from "./pages/ItemsTemplates";
+import LuggageTemplatesPage from "./pages/LuggageTemplates";
 
-import Trips from './pages/Trips';
-import TripDetails from './pages/TripDetails';
-import Items from './pages/Items';
-import Luggage from './pages/Luggage';
+const queryClient = new QueryClient();
 
-function App() {
-  return (
-    <Router>
-      <div className="container mx-auto p-4">
-        <h1 className="text-4xl font-bold text-center mb-8">Trip Packer</h1>
-        <nav className="flex justify-center space-x-4 mb-8">
-          <Link to="/" className="text-blue-500 hover:text-blue-700">Trips</Link>
-          <Link to="/items" className="text-blue-500 hover:text-blue-700">Items</Link>
-          <Link to="/luggage" className="text-blue-500 hover:text-blue-700">Luggage</Link>
-        </nav>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Trips />} />
-          <Route path="/trips/:tripId" element={<TripDetails />} />
-          <Route path="/items" element={<Items />} />
-          <Route path="/luggage" element={<Luggage />} />
+          <Route path="/" element={<Index />} />
+          <Route path="/trips" element={<TripsPage />} />
+          <Route path="/trips/:tripId" element={<TripDetailPage />} />
+          <Route path="/items" element={<ItemsTemplatesPage />} />
+          <Route path="/luggage" element={<LuggageTemplatesPage />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
-    </Router>
-  );
-}
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
