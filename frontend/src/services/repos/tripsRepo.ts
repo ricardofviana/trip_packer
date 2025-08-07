@@ -1,2 +1,10 @@
-// TripsRepo maps to /trips endpoints. For now it re-exports local adapter functions.
-export { listTrips, getTrip, createTrip, updateTrip, deleteTrip, getTripOverview } from "@/services/tripPacker";
+import { getTrips, getTrip, createTrip, updateTrip, deleteTrip, getTripLuggage } from "@/services/api";
+
+export const tripsRepo = {
+  listTrips: getTrips,
+  getTrip: getTrip,
+  createTrip: createTrip,
+  updateTrip: updateTrip,
+  deleteTrip: deleteTrip,
+  getTripLuggage: getTripLuggage,
+};

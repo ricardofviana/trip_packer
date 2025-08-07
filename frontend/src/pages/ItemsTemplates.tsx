@@ -15,23 +15,29 @@ export default function ItemsTemplatesPage() {
     document.title = "Item Templates — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Manage reusable item templates for faster packing.");
-    setItems(itemsRepo.listItems());
+    const fetchItems = async () => {
+      const response = await itemsRepo.listItems();
+      setItems(response.data);
+    };
+    fetchItems();
   }, []);
 
   const canCreate = useMemo(() => name.trim().length > 0 && qty > 0, [name, qty]);
 
-  const add = () => {
+  const add = async () => {
     if (!canCreate) return;
-    itemsRepo.createItem({ name: name.trim(), default_quantity: qty });
+    await itemsRepo.createItem({ name: name.trim(), category: "" }); // Assuming category is not critical for now
     setName("");
     setQty(1);
-    setItems(itemsRepo.listItems());
+    const response = await itemsRepo.listItems();
+    setItems(response.data);
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Delete this template?")) return;
-    itemsRepo.deleteItem(id);
-    setItems(itemsRepo.listItems());
+    await itemsRepo.deleteItem(id);
+    const response = await itemsRepo.listItems();
+    setItems(response.data);
   };
 
   return (

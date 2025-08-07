@@ -1,20 +1,10 @@
 import type { ID } from "@/types";
-import {
-  listLuggageTemplates,
-  getLuggageTemplate,
-  createLuggageTemplate,
-  updateLuggageTemplate,
-  deleteLuggageTemplate,
-  type LuggageTemplate,
-} from "@/services/templatesStorage";
-
-// Luggage templates repo maps to /luggage endpoints
-export type { LuggageTemplate } from "@/services/templatesStorage";
+import { getLuggage, getLuggageItem, createLuggage, updateLuggage, deleteLuggage } from "@/services/api";
 
 export const luggageRepo = {
-  listLuggage: listLuggageTemplates,
-  getLuggage: getLuggageTemplate,
-  createLuggage: (input: Omit<LuggageTemplate, "id">) => createLuggageTemplate(input),
-  updateLuggage: (id: ID, patch: Partial<Omit<LuggageTemplate, "id">>) => updateLuggageTemplate(id, patch),
-  deleteLuggage: (id: ID) => deleteLuggageTemplate(id),
+  listLuggage: getLuggage,
+  getLuggage: getLuggageItem,
+  createLuggage: (input: Omit<Luggage, "id">) => createLuggage(input),
+  updateLuggage: (id: ID, patch: Partial<Omit<Luggage, "id">>) => updateLuggage(id, patch),
+  deleteLuggage: (id: ID) => deleteLuggage(id),
 };

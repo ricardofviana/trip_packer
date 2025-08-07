@@ -14,22 +14,28 @@ export default function LuggageTemplatesPage() {
     document.title = "Luggage Templates — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
     if (meta) meta.setAttribute("content", "Manage reusable luggage templates to quickly build trips.");
-    setLuggage(luggageRepo.listLuggage());
+    const fetchLuggage = async () => {
+      const response = await luggageRepo.listLuggage();
+      setLuggage(response.data);
+    };
+    fetchLuggage();
   }, []);
 
   const canCreate = useMemo(() => name.trim().length > 0, [name]);
 
-  const add = () => {
+  const add = async () => {
     if (!canCreate) return;
-    luggageRepo.createLuggage({ name: name.trim() });
+    await luggageRepo.createLuggage({ name: name.trim(), type: "" }); // Assuming type is not critical for now
     setName("");
-    setLuggage(luggageRepo.listLuggage());
+    const response = await luggageRepo.listLuggage();
+    setLuggage(response.data);
   };
 
-  const remove = (id: string) => {
+  const remove = async (id: string) => {
     if (!confirm("Delete this luggage template?")) return;
-    luggageRepo.deleteLuggage(id);
-    setLuggage(luggageRepo.listLuggage());
+    await luggageRepo.deleteLuggage(id);
+    const response = await luggageRepo.listLuggage();
+    setLuggage(response.data);
   };
 
   return (
