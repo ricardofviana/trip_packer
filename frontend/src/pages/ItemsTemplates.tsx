@@ -9,10 +9,8 @@ import { itemsRepo, type ItemTemplate } from "@/services/repos/itemsRepo";
 export default function ItemsTemplatesPage() {
   const [items, setItems] = useState<ItemTemplate[]>([]);
   const [name, setName] = useState("");
-  const [qty, setQty] = useState<number>(1);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
-  const [editedQty, setEditedQty] = useState<number>(1);
 
   const fetchItems = async () => {
     const response = await itemsRepo.listItems();
@@ -109,12 +107,9 @@ export default function ItemsTemplatesPage() {
             </CardHeader>
             <CardContent>
               {editingItemId === it.id ? (
-                <div className="space-y-2 text-left">
-                  <Label htmlFor="editedQty">Default quantity</Label>
-                  <Input id="editedQty" type="number" min={1} value={editedQty} onChange={(e) => setEditedQty(Number(e.target.value))} />
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
+              {editingItemId === it.id ? (
+                null
+              ) : (                <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
               )}
               <Separator className="my-3" />
             </CardContent>

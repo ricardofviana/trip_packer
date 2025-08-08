@@ -35,7 +35,7 @@ export default function LuggageTemplatesPage() {
     fetchLuggage();
   };
 
-  const remove = async (id: string) => {
+  const remove = async (id: number) => {
     if (!confirm("Delete this luggage template?")) return;
     await luggageRepo.deleteLuggage(id);
     fetchLuggage();
@@ -46,7 +46,7 @@ export default function LuggageTemplatesPage() {
     setEditedName(lg.name);
   };
 
-  const saveEdit = async (id: string) => {
+  const saveEdit = async (id: number) => {
     if (!canSave) return;
     await luggageRepo.updateLuggage(id, { name: editedName.trim() });
     setEditingLuggageId(null);

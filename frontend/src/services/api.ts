@@ -1,5 +1,6 @@
 import axios from "axios";
-import type { Trip, TripCreate, TripUpdate, Luggage, LuggageCreate, LuggageUpdate, Item, ItemCreate, ItemUpdate, LuggageItemCreate, LuggageItemUpdate, LuggageItemStatusUpdate } from "@/types";
+import axios from "axios";
+import type { ID, Trip, TripCreate, TripUpdate, LuggageTemplate, LuggageCreate, LuggageUpdate, ItemTemplate, Item, ItemCreate, ItemUpdate, LuggageItemCreate, LuggageItemUpdate, LuggageItemStatusUpdate } from "@/types";
 
 const api = axios.create({
   baseURL: "/api",
@@ -7,31 +8,32 @@ const api = axios.create({
 
 // Trips
 export const getTrips = () => api.get<Trip[]>("/trips");
-export const getTrip = (id: string) => api.get<Trip>(`/trips/${id}`);
+export const getTrip = (id: ID) => api.get<Trip>(`/trips/${id}`);
 export const createTrip = (data: TripCreate) => api.post<Trip>("/trips", data);
-export const updateTrip = (id: string, data: TripUpdate) => api.put<Trip>(`/trips/${id}`, data);
-export const deleteTrip = (id: string) => api.delete(`/trips/${id}`);
-export const getTripLuggage = (tripId: string) => api.get<Luggage[]>(`/trips/${tripId}/luggage`);
-export const addLuggageToTrip = (tripId: string, luggageId: string) => api.post(`/trips/${tripId}/luggage/${luggageId}`);
-export const removeLuggageFromTrip = (tripId: string, luggageId: string) => api.delete(`/trips/${tripId}/luggage/${luggageId}`);
+export const updateTrip = (id: ID, data: TripUpdate) => api.put<Trip>(`/trips/${id}`, data);
+export const deleteTrip = (id: ID) => api.delete(`/trips/${id}`);
+export const getTripLuggage = (tripId: ID) => api.get<LuggageTemplate[]>(`/trips/${tripId}/luggage`);
+export const addLuggageToTrip = (tripId: ID, luggageId: ID) => api.post(`/trips/${tripId}/luggage/${luggageId}`);
+export const removeLuggageFromTrip = (tripId: ID, luggageId: ID) => api.delete(`/trips/${tripId}/luggage/${luggageId}`);
+export const getTripOverview = (tripId: ID) => api.get<{ total: number; PACKED: number; UNPACKED: number; TO_BUY: number }>(`/trips/${tripId}/overview`);
 
 // Luggage
-export const getLuggage = () => api.get<Luggage[]>("/luggage");
-export const getLuggageItem = (id: string) => api.get<Luggage>(`/luggage/${id}`);
-export const createLuggage = (data: LuggageCreate) => api.post<Luggage>("/luggage", data);
-export const updateLuggage = (id: string, data: LuggageUpdate) => api.put<Luggage>(`/luggage/${id}`, data);
-export const deleteLuggage = (id: string) => api.delete(`/luggage/${id}`);
+export const getLuggage = () => api.get<LuggageTemplate[]>("/luggage");
+export const getLuggageItem = (id: ID) => api.get<LuggageTemplate>(`/luggage/${id}`);
+export const createLuggage = (data: LuggageCreate) => api.post<LuggageTemplate>("/luggage", data);
+export const updateLuggage = (id: ID, data: LuggageUpdate) => api.put<LuggageTemplate>(`/luggage/${id}`, data);
+export const deleteLuggage = (id: ID) => api.delete(`/luggage/${id}`);
 
 // Items
-export const getItems = () => api.get<Item[]>("/items");
-export const getItem = (id: string) => api.get<Item>(`/items/${id}`);
-export const createItem = (data: ItemCreate) => api.post<Item>("/items", data);
-export const updateItem = (id: string, data: ItemUpdate) => api.put<Item>(`/items/${id}`, data);
-export const deleteItem = (id: string) => api.delete(`/items/${id}`);
+export const getItems = () => api.get<ItemTemplate[]>("/items");
+export const getItem = (id: ID) => api.get<ItemTemplate>(`/items/${id}`);
+export const createItem = (data: ItemCreate) => api.post<ItemTemplate>("/items", data);
+export const updateItem = (id: ID, data: ItemUpdate) => api.put<ItemTemplate>(`/items/${id}`, data);
+export const deleteItem = (id: ID) => api.delete(`/items/${id}`);
 
 // Packing
-export const getItemsInLuggage = (luggageId: string) => api.get<Item[]>(`/packing/luggage/${luggageId}/items`);
-export const addItemToLuggage = (luggageId: string, data: LuggageItemCreate) => api.post<Item>(`/packing/luggage/${luggageId}/items`, data);
-export const updateItemInLuggage = (luggageId: string, itemId: string, data: LuggageItemUpdate) => api.put<Item>(`/packing/luggage/${luggageId}/items/${itemId}`, data);
-export const removeItemFromLuggage = (luggageId: string, itemId: string) => api.delete(`/packing/luggage/${luggageId}/items/${itemId}`);
-export const updatePackingStatus = (luggageId: string, itemId: string, data: LuggageItemStatusUpdate) => api.put<Item>(`/packing/luggage/${luggageId}/items/${itemId}/status`, data);
+export const getItemsInLuggage = (luggageId: ID) => api.get<Item[]>(`/packing/luggage/${luggageId}/items`);
+export const addItemToLuggage = (luggageId: ID, data: LuggageItemCreate) => api.post<Item>(`/packing/luggage/${luggageId}/items`, data);
+export const updateItemInLuggage = (luggageId: ID, itemId: ID, data: LuggageItemUpdate) => api.put<Item>(`/packing/luggage/${luggageId}/items/${itemId}`, data);
+export const removeItemFromLuggage = (luggageId: ID, itemId: ID) => api.delete(`/packing/luggage/${luggageId}/items/${itemId}`);
+export const updatePackingStatus = (luggageId: ID, itemId: ID, data: LuggageItemStatusUpdate) => api.put<Item>(`/packing/luggage/${luggageId}/items/${itemId}/status`, data);

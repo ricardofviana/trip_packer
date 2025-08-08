@@ -84,7 +84,6 @@ function StatusFilter({ value, onChange }: { value: ItemStatus | "ALL"; onChange
         <SelectItem value="ALL">All items</SelectItem>
         <SelectItem value="UNPACKED">Unpacked</SelectItem>
         <SelectItem value="PACKED">Packed</SelectItem>
-        <SelectItem value="TO_BUY">To buy</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -136,18 +135,18 @@ function LuggageBoard({ tripId, filter, onChange }: { tripId: string; filter: It
 function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemStatus | "ALL"; allBags: Bag[]; onChange: () => void }) {
   const [items, setItems] = useState<Item[]>([]);
   const [itemTemplates, setItemTemplates] = useState<ItemTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("");
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number | "">("");
   const [name, setName] = useState("");
   const [qty, setQty] = useState<number>(1);
-  const [status, setStatus] = useState<ItemStatus>("UNPACKED");
+  const [isPacked, setIsPacked] = useState<boolean>(false); // Use isPacked directly
 
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedQty, setEditedQty] = useState<number>(1);
 
   const refresh = async () => {
     const response = await packingRepo.listLuggageItems(bag.id);
-    setItems(response.data);
+    setItems(response.data.map(item => ({ ...item, status: item.is_packed ? "PACKED" : "UNPACKED" }))); // Derive status
     const templatesResponse = await itemsRepo.listItems();
     setItemTemplates(templatesResponse.data);
   };
@@ -156,16 +155,16 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
 
   const addItem = async () => {
     if (selectedTemplateId) {
-      await packingRepo.addLuggageItem(bag.id, { item_id: selectedTemplateId, quantity: qty || 1 });
+      await packingRepo.addLuggageItem(bag.id, { item_id: selectedTemplateId as number, quantity: qty || 1, is_packed: isPacked });
     } else {
       const n = name.trim();
       if (!n) return;
-      const newItemTemplate = await itemsRepo.createItem({ name: n, category: "" });
-      await packingRepo.addLuggageItem(bag.id, { item_id: newItemTemplate.data.id, quantity: qty || 1 });
+      const newItemTemplate = await itemsRepo.createItem({ name: n, category: "General" }); // Default category
+      await packingRepo.addLuggageItem(bag.id, { item_id: newItemTemplate.data.id, quantity: qty || 1, is_packed: isPacked });
     }
     setName("");
     setQty(1);
-    setStatus("UNPACKED");
+    setIsPacked(false); // Reset to unpacked
     setSelectedTemplateId("");
     refresh();
     onChange();
@@ -177,7 +176,7 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
     setEditedQty(item.quantity);
   };
 
-  const saveEdit = async (itemId: string) => {
+  const saveEdit = async (itemId: number) => {
     if (!editedName.trim()) return;
     await packingRepo.updateLuggageItem(bag.id, itemId, { name: editedName.trim(), quantity: editedQty });
     setEditingItemId(null);
@@ -189,7 +188,14 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
     setEditingItemId(null);
   };
 
-  const visible = items.filter((i) => filter === "ALL" ? true : i.status === filter);
+  const visible = items.filter((i) => {
+    if (filter === "ALL") return true;
+    if (filter === "PACKED") return i.is_packed;
+    if (filter === "UNPACKED") return !i.is_packed;
+    // TO_BUY status is not directly from backend, so we need to handle it.
+    // For now, assuming TO_BUY is a separate flag or category if needed.
+    return true; // Fallback
+  });
 
   return (
     <Card className="flex flex-col">
@@ -208,11 +214,11 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
             <Label htmlFor={`item-${bag.id}`}>Add item</Label>
           </div>
           <div className="col-span-12">
-            <Select value={selectedTemplateId} onValueChange={(v) => setSelectedTemplateId(v)}>
+            <Select value={selectedTemplateId.toString()} onValueChange={(v) => setSelectedTemplateId(parseInt(v))}>
               <SelectTrigger><SelectValue placeholder="Select from templates" /></SelectTrigger>
               <SelectContent>
                 {itemTemplates.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>{template.name}</SelectItem>
+                  <SelectItem key={template.id} value={template.id.toString()}>{template.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -224,12 +230,11 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
             <Input type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value))} />
           </div>
           <div className="col-span-3">
-            <Select value={status} onValueChange={(v) => setStatus(v as ItemStatus)}>
+            <Select value={isPacked ? "PACKED" : "UNPACKED"} onValueChange={(v) => setIsPacked(v === "PACKED")}>
               <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>
-                ))}
+                <SelectItem value="UNPACKED">UNPACKED</SelectItem>
+                <SelectItem value="PACKED">PACKED</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -265,19 +270,18 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
                 ) : (
                   <Button variant="ghost" size="sm" onClick={() => startEditing(it)}>Edit</Button>
                 )}
-                <Select value={it.status} onValueChange={async (v) => { await packingRepo.updateLuggageItemStatus(bag.id, it.id, { is_packed: v === "PACKED" }); refresh(); onChange(); }}>
+                <Select value={it.is_packed ? "PACKED" : "UNPACKED"} onValueChange={async (v) => { await packingRepo.updateLuggageItemStatus(bag.id, it.id, { is_packed: v === "PACKED" }); refresh(); onChange(); }}>
                   <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {STATUS_OPTIONS.map((s) => (
-                      <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>
-                    ))}
+                    <SelectItem value="UNPACKED">UNPACKED</SelectItem>
+                    <SelectItem value="PACKED">PACKED</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={it.luggage_id} onValueChange={async (v) => { if (v !== it.luggage_id) { await packingRepo.updateLuggageItem(bag.id, it.id, { luggage_id: v }); refresh(); onChange(); } }}>
+                <Select value={it.luggage_id.toString()} onValueChange={async (v) => { if (parseInt(v) !== it.luggage_id) { await packingRepo.updateLuggageItem(bag.id, it.id, { luggage_id: parseInt(v) }); refresh(); onChange(); } }}>
                   <SelectTrigger className="w-[140px]"><SelectValue placeholder="Move to" /></SelectTrigger>
                   <SelectContent>
                     {allBags.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -294,8 +298,7 @@ function BagColumn({ bag, filter, allBags, onChange }: { bag: Bag; filter: ItemS
   );
 }
 
-function badgeVariant(status: ItemStatus): "secondary" | "default" | "destructive" {
-  if (status === "PACKED") return "default";
-  if (status === "TO_BUY") return "destructive";
+function badgeVariant(isPacked: boolean): "secondary" | "default" | "destructive" {
+  if (isPacked) return "default";
   return "secondary";
 }

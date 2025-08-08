@@ -71,7 +71,7 @@ export default function TripsPage() {
     setEditedEnd(trip.end_date);
   };
 
-  const saveEdit = async (id: string) => {
+  const saveEdit = async (id: number) => {
     if (!canSave) return;
     await tripsRepo.updateTrip(id, { name: editedName.trim(), start_date: editedStart, end_date: editedEnd });
     setEditingTripId(null);
