@@ -5,10 +5,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { itemsRepo, type ItemTemplate } from "@/services/repos/itemsRepo";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ItemCategory } from "@/types";
+
+const ItemCategoryEnum = {
+  CLOTHING: "CLOTHING",
+  ELECTRONICS: "ELECTRONICS",
+  TOILETRIES: "TOILETRIES",
+  DOCUMENTS: "DOCUMENTS",
+  MEDICATION: "MEDICATION",
+  ACCESSORIES: "ACCESSORIES",
+  OTHER: "OTHER",
+} as const;
 
 export default function ItemsTemplatesPage() {
   const [items, setItems] = useState<ItemTemplate[]>([]);
   const [name, setName] = useState("");
+  const [category, setCategory] = useState<ItemCategory>(ItemCategoryEnum.CLOTHING);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedName, setEditedName] = useState("");
 
@@ -25,14 +38,14 @@ export default function ItemsTemplatesPage() {
     fetchItems();
   }, []);
 
-  const canCreate = useMemo(() => name.trim().length > 0 && qty > 0, [name, qty]);
-  const canSave = useMemo(() => editedName.trim().length > 0 && editedQty > 0, [editedName, editedQty]);
+  const canCreate = useMemo(() => name.trim().length > 0, [name, category]);
+  const canSave = useMemo(() => editedName.trim().length > 0, [editedName, category]);
 
   const add = async () => {
     if (!canCreate) return;
-    await itemsRepo.createItem({ name: name.trim(), category: "" }); // Assuming category is not critical for now
+    await itemsRepo.createItem({ name: name.trim(), category});
     setName("");
-    setQty(1);
+    setCategory(ItemCategoryEnum.CLOTHING);
     fetchItems();
   };
 
@@ -45,12 +58,12 @@ export default function ItemsTemplatesPage() {
   const startEditing = (item: ItemTemplate) => {
     setEditingItemId(item.id);
     setEditedName(item.name);
-    setEditedQty(item.default_quantity);
+    setCategory(item.category);
   };
 
   const saveEdit = async (id: string) => {
     if (!canSave) return;
-    await itemsRepo.updateItem(id, { name: editedName.trim(), default_quantity: editedQty });
+    await itemsRepo.updateItem(id, { name: editedName.trim(), category});
     setEditingItemId(null);
     fetchItems();
   };
@@ -76,8 +89,17 @@ export default function ItemsTemplatesPage() {
               <Input id="name" placeholder="T-shirt" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2 text-left">
-              <Label htmlFor="qty">Default quantity</Label>
-              <Input id="qty" type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value))} />
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={(value) => setCategory(value as ItemCategory)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(ItemCategoryEnum).map((cat) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={add} disabled={!canCreate} className="w-full">Create</Button>
           </CardContent>
@@ -108,7 +130,10 @@ export default function ItemsTemplatesPage() {
             <CardContent>
               {editingItemId === it.id ? (
                 null
-              ) : (                <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">Category: {it.category}</p>
+                </>
               )}
               <Separator className="my-3" />
             </CardContent>

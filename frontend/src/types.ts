@@ -50,6 +50,22 @@ export interface Bag {
 
 export type ItemStatus = "UNPACKED" | "PACKED" | "TO_BUY";
 
+export type LuggageType =
+  | "BACKPACK"
+  | "CARRY_ON"
+  | "CHECKED_MEDIUM"
+  | "CHECKED_LARGE";
+
+
+export type ItemCategory =
+  | "CLOTHING"
+  | "ELECTRONICS"
+  | "TOILETRIES"
+  | "DOCUMENTS"
+  | "MEDICATION"
+  | "ACCESSORIES"
+  | "OTHER";
+
 export interface ItemTemplate {
   id: ID;
   name: string;
