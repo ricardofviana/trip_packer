@@ -107,7 +107,6 @@ export default function ItemsTemplatesPage() {
             </CardHeader>
             <CardContent>
               {editingItemId === it.id ? (
-              {editingItemId === it.id ? (
                 null
               ) : (                <p className="text-sm text-muted-foreground">Default quantity ×{it.default_quantity}</p>
               )}
