@@ -110,6 +110,7 @@ export interface Item {
   name: string;
   quantity: number;
   category: ItemCategory;
+  is_packed: boolean; // Added for direct status tracking
   status: ItemStatus;
   created_at: string;
   updated_at: string;
