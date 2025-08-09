@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function LearnMorePage() {
   return (
     <main className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-md mt-10">
-      <h1 className="text-4xl font-extrabold text-blue-700 mb-6">Smart Luggage Manager</h1>
+      <h1 className="text-4xl font-extrabold text-blue-700 mb-6">Smart Bag Manager</h1>
 
       <p className="text-lg text-gray-700 mb-8">
         <strong className="font-semibold">Goal:</strong> Empower travelers to pack efficiently by organizing items, tracking essentials, and preventing forgotten belongings.
@@ -22,10 +22,10 @@ export default function LearnMorePage() {
             </ul>
           </li>
           <li>
-            <strong className="text-blue-600">Luggage Management</strong>
+            <strong className="text-blue-600">Bag Management</strong>
             <ul className="list-disc list-inside ml-6 mt-2 space-y-1">
               <li><em>Multi-Bag Support:</em> Assign items to various bags like <span className="font-semibold">Suitcase</span>, <span className="font-semibold">Backpack</span>, or <span className="font-semibold">Toiletry Bag</span>.</li>
-              <li><em>Weight Tracking (Optional):</em> Keep an eye on luggage weight to avoid airline fees.</li>
+              <li><em>Weight Tracking (Optional):</em> Keep an eye on bag weight to avoid airline fees.</li>
             </ul>
           </li>
           <li>

@@ -29,7 +29,7 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('luggage',
+    op.create_table('bag',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('type', sa.Enum('BACKPACK', 'CARRY_ON', 'CHECKED_MEDIUM', 'CHECKED_LARGE', name='luggagetype'), nullable=False),
@@ -55,7 +55,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
-    sa.ForeignKeyConstraint(['luggage_id'], ['luggage.id'], ),
+    sa.ForeignKeyConstraint(['luggage_id'], ['bag.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('luggage_trip',
@@ -64,7 +64,7 @@ def upgrade() -> None:
     sa.Column('trip_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['luggage_id'], ['luggage.id'], ),
+    sa.ForeignKeyConstraint(['luggage_id'], ['bag.id'], ),
     sa.ForeignKeyConstraint(['trip_id'], ['trips.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -77,6 +77,6 @@ def downgrade() -> None:
     op.drop_table('luggage_trip')
     op.drop_table('item_luggage')
     op.drop_table('trips')
-    op.drop_table('luggage')
+    op.drop_table('bag')
     op.drop_table('items')
     # ### end Alembic commands ###

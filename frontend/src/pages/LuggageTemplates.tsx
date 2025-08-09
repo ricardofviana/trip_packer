@@ -9,7 +9,7 @@ import { luggageRepo, type LuggageTemplate } from "@/services/repos/luggageRepo"
 import { LuggageType } from "@/types";
 
 export default function LuggageTemplatesPage() {
-  const [luggage, setLuggage] = useState<LuggageTemplate[]>([]);
+  const [bag, setLuggage] = useState<LuggageTemplate[]>([]);
   const [category, setCategory] = useState(LuggageType.BACKPACK);
   const [name, setName] = useState("");
   const [editingLuggageId, setEditingLuggageId] = useState<string | null>(null);
@@ -23,9 +23,9 @@ export default function LuggageTemplatesPage() {
   };
 
   useEffect(() => {
-    document.title = "Luggage Templates — Trip Packer";
+    document.title = "Bag Templates — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Manage reusable luggage templates to quickly build trips.");
+    if (meta) meta.setAttribute("content", "Manage reusable bag templates to quickly build trips.");
     fetchLuggage();
   }, []);
 
@@ -40,7 +40,7 @@ export default function LuggageTemplatesPage() {
   };
 
   const remove = async (id: number) => {
-    if (!confirm("Delete this luggage template?")) return;
+    if (!confirm("Delete this bag template?")) return;
     await luggageRepo.deleteLuggage(id);
     fetchLuggage();
   };
@@ -66,12 +66,12 @@ export default function LuggageTemplatesPage() {
   return (
     <main className="container py-10">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Luggage templates</h1>
+        <h1 className="text-3xl font-bold">Bag templates</h1>
       </header>
       <section className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Create luggage template</CardTitle>
+            <CardTitle>Create bag template</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
@@ -99,7 +99,7 @@ export default function LuggageTemplatesPage() {
           </CardContent>
         </Card>
 
-        {Array.isArray(luggage) && luggage.map((lg) => (
+        {Array.isArray(bag) && bag.map((lg) => (
           <Card key={lg.id} className="relative">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -122,7 +122,7 @@ export default function LuggageTemplatesPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Reusable luggage template</p>
+              <p className="text-sm text-muted-foreground">Reusable bag template</p>
               <Separator className="my-3" />
             </CardContent>
           </Card>

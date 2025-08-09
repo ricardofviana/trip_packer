@@ -2,10 +2,10 @@ from http import HTTPStatus
 
 
 def test_create_luggage(client):
-    """Test creating a new luggage item."""
+    """Test creating a new bag item."""
     luggage_data = {"name": "Weekend Backpack", "type": "BACKPACK"}
 
-    response = client.post("/api/luggage/", json=luggage_data)
+    response = client.post("/api/bag/", json=luggage_data)
 
     assert response.status_code == HTTPStatus.CREATED
     data = response.json()
@@ -17,17 +17,17 @@ def test_create_luggage(client):
 
 
 def test_create_duplicate_luggage(client):
-    """Test creating a luggage with a duplicate name."""
+    """Test creating a bag with a duplicate name."""
     luggage_data = {"name": "Weekend Backpack", "type": "BACKPACK"}
-    client.post("/api/luggage/", json=luggage_data)
-    response = client.post("/api/luggage/", json=luggage_data)
+    client.post("/api/bag/", json=luggage_data)
+    response = client.post("/api/bag/", json=luggage_data)
 
     assert response.status_code == HTTPStatus.CONFLICT
 
 
 def test_get_luggage(client):
-    """Test getting all luggage items."""
-    # Create test luggage items
+    """Test getting all bag items."""
+    # Create test bag items
     expected_lugages = 3
     luggage_items = [
         {"name": "Carry-on Suitcase", "type": "CARRY_ON"},
@@ -36,28 +36,28 @@ def test_get_luggage(client):
     ]
 
     for luggage_data in luggage_items:
-        client.post("/api/luggage/", json=luggage_data)
+        client.post("/api/bag/", json=luggage_data)
 
-    response = client.get("/api/luggage/")
+    response = client.get("/api/bag/")
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
     assert len(data) == expected_lugages
-    assert all("id" in luggage for luggage in data)
-    assert all("name" in luggage for luggage in data)
-    assert all("type" in luggage for luggage in data)
+    assert all("id" in bag for bag in data)
+    assert all("name" in bag for bag in data)
+    assert all("type" in bag for bag in data)
 
 
 def test_get_single_luggage(client):
-    """Test getting a single luggage item by ID."""
-    # Create a luggage item
+    """Test getting a single bag item by ID."""
+    # Create a bag item
     luggage_data = {"name": "Travel Duffel", "type": "CHECKED_LARGE"}
-    create_response = client.post("/api/luggage/", json=luggage_data)
+    create_response = client.post("/api/bag/", json=luggage_data)
     created_luggage = create_response.json()
     luggage_id = created_luggage["id"]
 
-    # Get the luggage item
-    response = client.get(f"/api/luggage/{luggage_id}")
+    # Get the bag item
+    response = client.get(f"/api/bag/{luggage_id}")
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
@@ -69,24 +69,24 @@ def test_get_single_luggage(client):
 
 
 def test_get_nonexistent_luggage(client):
-    """Test getting a luggage item that doesn't exist."""
-    response = client.get("/api/luggage/999")
+    """Test getting a bag item that doesn't exist."""
+    response = client.get("/api/bag/999")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "not found" in response.json()["detail"]
 
 
 def test_update_luggage(client):
-    """Test updating an existing luggage item."""
-    # Create a luggage item
+    """Test updating an existing bag item."""
+    # Create a bag item
     luggage_data = {"name": "Old Backpack", "type": "BACKPACK"}
-    create_response = client.post("/api/luggage/", json=luggage_data)
+    create_response = client.post("/api/bag/", json=luggage_data)
     created_luggage = create_response.json()
     luggage_id = created_luggage["id"]
 
-    # Update the luggage item
+    # Update the bag item
     update_data = {"name": "New Backpack", "type": "CARRY_ON"}
-    response = client.put(f"/api/luggage/{luggage_id}", json=update_data)
+    response = client.put(f"/api/bag/{luggage_id}", json=update_data)
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
@@ -96,16 +96,16 @@ def test_update_luggage(client):
 
 
 def test_partial_update_luggage(client):
-    """Test partially updating a luggage item."""
-    # Create a luggage item
+    """Test partially updating a bag item."""
+    # Create a bag item
     luggage_data = {"name": "Business Suitcase", "type": "CARRY_ON"}
-    create_response = client.post("/api/luggage/", json=luggage_data)
+    create_response = client.post("/api/bag/", json=luggage_data)
     created_luggage = create_response.json()
     luggage_id = created_luggage["id"]
 
-    # Partially update the luggage item (only name)
+    # Partially update the bag item (only name)
     update_data = {"name": "Updated Business Suitcase"}
-    response = client.put(f"/api/luggage/{luggage_id}", json=update_data)
+    response = client.put(f"/api/bag/{luggage_id}", json=update_data)
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
@@ -115,37 +115,37 @@ def test_partial_update_luggage(client):
 
 
 def test_update_nonexistent_luggage(client):
-    """Test updating a luggage item that doesn't exist."""
-    update_data = {"name": "Ghost Luggage", "type": "BACKPACK"}
-    response = client.put("/api/luggage/999", json=update_data)
+    """Test updating a bag item that doesn't exist."""
+    update_data = {"name": "Ghost Bag", "type": "BACKPACK"}
+    response = client.put("/api/bag/999", json=update_data)
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "not found" in response.json()["detail"]
 
 
 def test_delete_luggage(client):
-    """Test deleting a luggage item."""
-    # Create a luggage item
+    """Test deleting a bag item."""
+    # Create a bag item
     luggage_data = {"name": "Temporary Bag", "type": "BACKPACK"}
-    create_response = client.post("/api/luggage/", json=luggage_data)
+    create_response = client.post("/api/bag/", json=luggage_data)
     created_luggage = create_response.json()
     luggage_id = created_luggage["id"]
 
-    # Delete the luggage item
-    response = client.delete(f"/api/luggage/{luggage_id}")
+    # Delete the bag item
+    response = client.delete(f"/api/bag/{luggage_id}")
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
     assert "deleted successfully" in data["message"]
 
-    # Verify the luggage item is actually deleted
-    get_response = client.get(f"/api/luggage/{luggage_id}")
+    # Verify the bag item is actually deleted
+    get_response = client.get(f"/api/bag/{luggage_id}")
     assert get_response.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_delete_nonexistent_luggage(client):
-    """Test deleting a luggage item that doesn't exist."""
-    response = client.delete("/api/luggage/999")
+    """Test deleting a bag item that doesn't exist."""
+    response = client.delete("/api/bag/999")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "not found" in response.json()["detail"]

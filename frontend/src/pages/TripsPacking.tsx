@@ -73,7 +73,7 @@ function LuggageBoard({ tripId, filter, onChange, isLoading: pageLoading }: { tr
       onChange(); // Notify parent to refresh overview
     } catch (error) {
       console.error("Failed to fetch bags:", error);
-      toast.error("Failed to load luggage.");
+      toast.error("Failed to load bag.");
     } finally {
       setIsLoading(false);
     }
@@ -105,7 +105,7 @@ function LuggageBoard({ tripId, filter, onChange, isLoading: pageLoading }: { tr
     <section className="grid gap-6 md:grid-cols-3">
       <Card>
         <CardHeader>
-          <CardTitle>Add luggage</CardTitle>
+          <CardTitle>Add bag</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2 text-left">

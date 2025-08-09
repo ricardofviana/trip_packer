@@ -4,7 +4,7 @@ import sys
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from trip_packer.routers import items, luggage, packing, trips
+from trip_packer.routers import bag, items, packing, trips
 
 app = FastAPI()
 
@@ -23,7 +23,7 @@ app.add_middleware(
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(items.router)
-api_router.include_router(luggage.router)
+api_router.include_router(bag.router)
 api_router.include_router(trips.router)
 api_router.include_router(packing.router)
 

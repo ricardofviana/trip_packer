@@ -21,8 +21,8 @@ export function Navbar() {
           </Link>
         </li>
         <li>
-          <Link to="/luggage" className={cn("hover:underline")}>
-            Luggage
+          <Link to="/bag" className={cn("hover:underline")}>
+            Bag
           </Link>
         </li>
         <li>

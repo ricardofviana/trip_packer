@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Luggage } from "lucide-react";
+import { Bag } from "lucide-react";
 import { tripsRepo } from "@/services/repos/tripsRepo";
 import type { Trip } from "@/types";
 
@@ -59,7 +59,7 @@ export default function TripsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this trip? This also removes its luggage and items.")) return;
+    if (!confirm("Delete this trip? This also removes its bag and items.")) return;
     await tripsRepo.deleteTrip(id);
     fetchTrips();
   };
@@ -86,7 +86,7 @@ export default function TripsPage() {
     <main className="container py-10">
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Luggage className="w-8 h-8" /> Your Trips
+          <Bag className="w-8 h-8" /> Your Trips
         </h1>
       </header>
 

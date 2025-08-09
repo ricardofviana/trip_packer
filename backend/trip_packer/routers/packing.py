@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from trip_packer.database import get_session
-from trip_packer.models import Item, ItemLuggage, ItemStatus, Luggage
+from trip_packer.models import Bag, Item, ItemLuggage, ItemStatus
 from trip_packer.schemas import (
     LuggageItemCreate,
     LuggageItemResponse,
@@ -20,14 +20,14 @@ router = APIRouter(prefix="/packing", tags=["packing"])
 
 
 @router.get(
-    "/luggage/{luggage_id}/items",
+    "/bag/{luggage_id}/items",
     response_model=List[LuggageItemResponse],
 )
 async def get_items_in_luggage(
     luggage_id: int,
     session: T_Session,
 ):
-    """Get all items in a specific luggage"""
+    """Get all items in a specific bag"""
     query = (
         select(ItemLuggage)
         .join(Item)
@@ -53,7 +53,7 @@ async def get_items_in_luggage(
 
 
 @router.post(
-    "/luggage/{luggage_id}/items",
+    "/bag/{luggage_id}/items",
     response_model=LuggageItemResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -62,12 +62,12 @@ async def add_item_to_luggage(
     item_data: LuggageItemCreate,
     session: T_Session,
 ):
-    """Add an item to a specific luggage"""
-    db_luggage = await session.get(Luggage, luggage_id)
+    """Add an item to a specific bag"""
+    db_luggage = await session.get(Bag, luggage_id)
     if not db_luggage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Luggage with id {luggage_id} not found",
+            detail=f"Bag with id {luggage_id} not found",
         )
 
     db_item = await session.get(Item, item_data.item_id)
@@ -99,7 +99,7 @@ async def add_item_to_luggage(
 
 
 @router.put(
-    "/luggage/{luggage_id}/items/{item_id}",
+    "/bag/{luggage_id}/items/{item_id}",
     response_model=LuggageItemResponse,
 )
 async def update_item_in_luggage(
@@ -108,7 +108,7 @@ async def update_item_in_luggage(
     item_data: LuggageItemUpdate,
     session: T_Session,
 ):
-    """Update an item's quantity or notes in a specific luggage"""
+    """Update an item's quantity or notes in a specific bag"""
     query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
     result = await session.execute(query)
     db_item_luggage = result.scalar_one_or_none()
@@ -116,7 +116,7 @@ async def update_item_in_luggage(
     if not db_item_luggage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found in this luggage",
+            detail="Item not found in this bag",
         )
 
     if item_data.quantity is not None:
@@ -141,7 +141,7 @@ async def update_item_in_luggage(
 
 
 @router.delete(
-    "/luggage/{luggage_id}/items/{item_id}",
+    "/bag/{luggage_id}/items/{item_id}",
     response_model=Message,
 )
 async def remove_item_from_luggage(
@@ -149,7 +149,7 @@ async def remove_item_from_luggage(
     item_id: int,
     session: T_Session,
 ):
-    """Remove an item from a specific luggage"""
+    """Remove an item from a specific bag"""
     query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
     result = await session.execute(query)
     db_item_luggage = result.scalar_one_or_none()
@@ -157,17 +157,17 @@ async def remove_item_from_luggage(
     if not db_item_luggage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found in this luggage",
+            detail="Item not found in this bag",
         )
 
     await session.delete(db_item_luggage)
     await session.commit()
 
-    return {"message": "Item removed from luggage successfully"}
+    return {"message": "Item removed from bag successfully"}
 
 
 @router.put(
-    "/luggage/{luggage_id}/items/{item_id}/status",
+    "/bag/{luggage_id}/items/{item_id}/status",
     response_model=LuggageItemResponse,
 )
 async def update_packing_status(
@@ -176,7 +176,7 @@ async def update_packing_status(
     status_data: LuggageItemStatusUpdate,
     session: T_Session,
 ):
-    """Update the packing status of an item in a specific luggage"""
+    """Update the packing status of an item in a specific bag"""
     query = select(ItemLuggage).where(ItemLuggage.luggage_id == luggage_id, ItemLuggage.item_id == item_id)
     result = await session.execute(query)
     db_item_luggage = result.scalar_one_or_none()
@@ -184,7 +184,7 @@ async def update_packing_status(
     if not db_item_luggage:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Item not found in this luggage",
+            detail="Item not found in this bag",
         )
 
     db_item_luggage.status = ItemStatus.PACKED if status_data.is_packed else ItemStatus.UNPACKED

@@ -1,7 +1,7 @@
 import type { ID, LuggageTemplate } from "@/types";
 import { getTripLuggage, addLuggageToTrip, removeLuggageFromTrip } from "@/services/api";
 
-// TripLuggageRepo maps to /trips/{trip_id}/luggage endpoints.
+// TripLuggageRepo maps to /trips/{trip_id}/bag endpoints.
 
 export const tripLuggageRepo = {
   listTripLuggage: getTripLuggage as (tripId: ID) => Promise<{ data: LuggageTemplate[] }>,

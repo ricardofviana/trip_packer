@@ -56,7 +56,7 @@ export default function TripDetailPage() {
   useEffect(() => {
     document.title = trip ? `${trip.name} — Trip Packer` : "Trip — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Pack items across luggage, track statuses, and review before you go.");
+    if (meta) meta.setAttribute("content", "Pack items across bag, track statuses, and review before you go.");
   }, [trip]);
 
   if (!trip || !tripId) {
@@ -83,7 +83,7 @@ export default function TripDetailPage() {
       </header>
 
       <section className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">All Available Luggage Templates</h2>
+        <h2 className="text-2xl font-bold mb-4">All Available Bag Templates</h2>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {allLuggageTemplates.map((template) => (
             <Card key={template.id}>

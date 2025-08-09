@@ -45,8 +45,8 @@ class Item:
 
 
 @table_registry.mapped_as_dataclass
-class Luggage:
-    __tablename__ = "luggage"
+class Bag:
+    __tablename__ = "bag"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False, unique=True)
@@ -55,7 +55,7 @@ class Luggage:
     updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    luggage_trips: Mapped[list["LuggageTrip"]] = relationship(init=False, back_populates="luggage")
+    luggage_trips: Mapped[list["LuggageTrip"]] = relationship(init=False, back_populates="bag")
 
 
 @table_registry.mapped_as_dataclass
@@ -79,7 +79,7 @@ class ItemLuggage:
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     item_id: Mapped[int] = mapped_column(ForeignKey("items.id"))
-    luggage_id: Mapped[int] = mapped_column(ForeignKey("luggage.id"))
+    luggage_id: Mapped[int] = mapped_column(ForeignKey("bag.id"))
     status: Mapped[ItemStatus] = mapped_column(default=ItemStatus.UNPACKED)
     quantity: Mapped[int] = mapped_column(default=1)
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
@@ -97,13 +97,13 @@ class LuggageTrip:
     __tablename__ = "luggage_trip"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    luggage_id: Mapped[int] = mapped_column(ForeignKey("luggage.id"))
+    luggage_id: Mapped[int] = mapped_column(ForeignKey("bag.id"))
     trip_id: Mapped[int] = mapped_column(ForeignKey("trips.id"))
     created_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(init=False, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    luggage: Mapped["Luggage"] = relationship(init=False, back_populates="luggage_trips")
+    bag: Mapped["Bag"] = relationship(init=False, back_populates="luggage_trips")
     trip: Mapped["Trip"] = relationship(init=False, back_populates="luggage_trips")
     item_luggage: Mapped[list["ItemLuggage"]] = relationship(
         init=False,

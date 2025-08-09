@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from trip_packer.database import get_session
-from trip_packer.models import Luggage, LuggageTrip, Trip
+from trip_packer.models import Bag, LuggageTrip, Trip
 from trip_packer.schemas import LuggageResponse, Message, TripCreate, TripResponse, TripUpdate
 
 router = APIRouter(prefix="/trips", tags=["trips"])
@@ -87,37 +87,37 @@ async def delete_trip(trip_id: int, session: T_Session):
     return Message(message=f"Trip with id {trip_id} has been deleted successfully")
 
 
-@router.get("/{trip_id}/luggage", response_model=list[LuggageResponse])
+@router.get("/{trip_id}/bag", response_model=list[LuggageResponse])
 async def get_trip_luggage(trip_id: int, session: T_Session):
-    """Get all luggage for a specific trip."""
+    """Get all bag for a specific trip."""
     # First check if trip exists
     trip = await session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-    # Get luggage associated with this trip
+    # Get bag associated with this trip
     result = await session.execute(
-        select(Luggage).join(LuggageTrip, Luggage.id == LuggageTrip.luggage_id).where(LuggageTrip.trip_id == trip_id)
+        select(Bag).join(LuggageTrip, Bag.id == LuggageTrip.luggage_id).where(LuggageTrip.trip_id == trip_id)
     )
     luggage_items = result.scalars().all()
 
     return luggage_items
 
 
-@router.post("/{trip_id}/luggage/{luggage_id}", response_model=Message, status_code=status.HTTP_201_CREATED)
+@router.post("/{trip_id}/bag/{luggage_id}", response_model=Message, status_code=status.HTTP_201_CREATED)
 async def add_luggage_to_trip(trip_id: int, luggage_id: int, session: T_Session):
-    """Add luggage to a trip."""
+    """Add bag to a trip."""
     # Check if trip exists
     trip = await session.get(Trip, trip_id)
     if not trip:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-    # Check if luggage exists
-    luggage = await session.get(Luggage, luggage_id)
-    if not luggage:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Luggage with id {luggage_id} not found")
+    # Check if bag exists
+    bag = await session.get(Bag, luggage_id)
+    if not bag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Bag with id {luggage_id} not found")
 
-    # Check if luggage is already associated with this trip
+    # Check if bag is already associated with this trip
     result = await session.execute(
         select(LuggageTrip).where(LuggageTrip.trip_id == trip_id, LuggageTrip.luggage_id == luggage_id)
     )
@@ -126,7 +126,7 @@ async def add_luggage_to_trip(trip_id: int, luggage_id: int, session: T_Session)
     if existing_association:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail=f"Luggage with id {luggage_id} is already associated with trip {trip_id}",
+            detail=f"Bag with id {luggage_id} is already associated with trip {trip_id}",
         )
 
     # Create the association
@@ -134,12 +134,12 @@ async def add_luggage_to_trip(trip_id: int, luggage_id: int, session: T_Session)
     session.add(luggage_trip)
     await session.commit()
 
-    return Message(message=f"Luggage with id {luggage_id} has been added to trip {trip_id} successfully")
+    return Message(message=f"Bag with id {luggage_id} has been added to trip {trip_id} successfully")
 
 
-@router.delete("/{trip_id}/luggage/{luggage_id}", response_model=Message)
+@router.delete("/{trip_id}/bag/{luggage_id}", response_model=Message)
 async def remove_luggage_from_trip(trip_id: int, luggage_id: int, session: T_Session):
-    """Remove luggage from a trip."""
+    """Remove bag from a trip."""
     # Find the association
     result = await session.execute(
         select(LuggageTrip).where(LuggageTrip.trip_id == trip_id, LuggageTrip.luggage_id == luggage_id)
@@ -149,10 +149,10 @@ async def remove_luggage_from_trip(trip_id: int, luggage_id: int, session: T_Ses
     if not association:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Luggage with id {luggage_id} is not associated with trip {trip_id}",
+            detail=f"Bag with id {luggage_id} is not associated with trip {trip_id}",
         )
 
     await session.delete(association)
     await session.commit()
 
-    return Message(message=f"Luggage with id {luggage_id} has been removed from trip {trip_id} successfully")
+    return Message(message=f"Bag with id {luggage_id} has been removed from trip {trip_id} successfully")

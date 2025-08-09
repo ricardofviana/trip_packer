@@ -1,4 +1,4 @@
-# 🚀 Trip Packer - Luggage Management System
+# 🚀 Trip Packer - Bag Management System
 
 ---
 
@@ -34,7 +34,7 @@ The system is built around three main resources:
 | Entity   | Description                          | Key Fields                                  |
 | -------- | ---------------------------------- | -------------------------------------------|
 | **Trip** | Represents a user’s journey        | `id`, `name`, `start_date`, `end_date`    |
-| **Luggage (Bag)** | Represents a piece of luggage within a trip | `id`, `name`, `trip_id`                     |
+| **Bag (Bag)** | Represents a piece of bag within a trip | `id`, `name`, `trip_id`                     |
 | **Item** | Represents an article to be packed | `id`, `name`, `quantity`, `status`, `luggage_id` |
 
 ---
@@ -45,14 +45,14 @@ The system is built around three main resources:
 - Create, view, update, and delete trips.
 - View detailed trip info including duration and day names.
 
-### Luggage Management
-- Add, view, update, and delete luggage within trips.
-- Properly handle items when luggage is deleted.
+### Bag Management
+- Add, view, update, and delete bag within trips.
+- Properly handle items when bag is deleted.
 
 ### Item Management & Packing Workflow
-- Add items to luggage with specified quantity.
+- Add items to bag with specified quantity.
 - Update item details and status (`UNPACKED`, `PACKED`, `TO_BUY`).
-- Move items between luggage within the same trip.
+- Move items between bag within the same trip.
 - Delete items.
 
 ### Pre-Trip Review
@@ -74,7 +74,7 @@ The system is built around three main resources:
 
 ### Frontend Highlights
 - Consumes FastAPI backend via RESTful JSON APIs.
-- Intuitive UI for managing trips, luggage, and items.
+- Intuitive UI for managing trips, bag, and items.
 - Mobile-friendly and accessible design.
 - Components developed and documented in Storybook.
 - Automated tests with Vitest.
@@ -106,7 +106,7 @@ The system is built around three main resources:
 - User authentication and authorization.
 - Packing list templates for different trip types.
 - Sharing packing lists with other users.
-- Weight estimation for luggage.
+- Weight estimation for bag.
 - Advanced analytics or AI-based packing suggestions.
 
 ---

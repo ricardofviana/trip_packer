@@ -40,23 +40,23 @@ class TripResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-# Luggage schemas for CRUD operations
+# Bag schemas for CRUD operations
 class LuggageCreate(BaseModel):
-    """Schema for creating new luggage"""
+    """Schema for creating new bag"""
 
     name: str
     type: LuggageType
 
 
 class LuggageUpdate(BaseModel):
-    """Schema for updating existing luggage"""
+    """Schema for updating existing bag"""
 
     name: Optional[str] = None
     type: Optional[LuggageType] = None
 
 
 class LuggageResponse(BaseModel):
-    """Schema for luggage responses"""
+    """Schema for bag responses"""
 
     id: int
     name: str
@@ -68,7 +68,7 @@ class LuggageResponse(BaseModel):
 
 
 # Keep backward compatibility
-class Luggage(BaseModel):
+class Bag(BaseModel):
     id: int
     name: str
     type: str
@@ -102,7 +102,7 @@ class ItemResponse(BaseModel):
 
 
 class LuggageItemCreate(BaseModel):
-    """Schema for adding an item to luggage"""
+    """Schema for adding an item to bag"""
 
     item_id: int
     quantity: Optional[int] = 1
@@ -110,7 +110,7 @@ class LuggageItemCreate(BaseModel):
 
 
 class LuggageItemUpdate(BaseModel):
-    """Schema for updating an item in luggage"""
+    """Schema for updating an item in bag"""
 
     quantity: Optional[int] = None
     notes: Optional[str] = None
@@ -123,7 +123,7 @@ class LuggageItemStatusUpdate(BaseModel):
 
 
 class LuggageItemResponse(BaseModel):
-    """Response schema for items in luggage"""
+    """Response schema for items in bag"""
 
     item_id: int
     name: str

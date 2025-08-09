@@ -6,7 +6,7 @@ const Index = () => {
   useEffect(() => {
     document.title = "Trip Packer — Pack smarter, stress less";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Plan trips, organize luggage, and track packed, unpacked, and to-buy items.");
+    if (meta) meta.setAttribute("content", "Plan trips, organize bag, and track packed, unpacked, and to-buy items.");
   }, []);
 
   return (
@@ -16,7 +16,7 @@ const Index = () => {
           Trip Packer
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-          Plan your trips, organize luggage, and breeze through packing with clear statuses and a delightful workflow.
+          Plan your trips, organize bag, and breeze through packing with clear statuses and a delightful workflow.
         </p>
         <div className="flex items-center justify-center gap-4">
           <Button asChild size="lg">
