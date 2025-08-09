@@ -1,9 +1,16 @@
+import asyncio
+import sys
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from trip_packer.routers import items, luggage, packing, trips
 
 app = FastAPI()
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 
 app.add_middleware(
     CORSMiddleware,
