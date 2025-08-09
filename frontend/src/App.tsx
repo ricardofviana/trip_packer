@@ -10,7 +10,7 @@ import TripsPage from "./pages/Trips";
 import TripDetailPage from "./pages/TripDetail";
 import ItemsTemplatesPage from "./pages/ItemsTemplates";
 import BagTemplatesPage from "./pages/BagTemplates";
-
+import LearnMorePage from "./pages/LearnMore";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +27,7 @@ const App = () => (
           <Route path="/trips/:tripId" element={<TripDetailPage />} />
           <Route path="/items" element={<ItemsTemplatesPage />} />
           <Route path="/bags" element={<BagTemplatesPage />} />
-          
+          <Route path="/learn-more" element={<LearnMorePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
