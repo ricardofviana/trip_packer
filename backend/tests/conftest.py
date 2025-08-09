@@ -1,3 +1,6 @@
+import asyncio
+import sys
+
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
@@ -7,7 +10,9 @@ from testcontainers.postgres import PostgresContainer
 from trip_packer.app import app
 from trip_packer.database import get_session
 from trip_packer.models import table_registry
-from trip_packer.settings import Settings
+
+if sys.platform.startswith("win"):
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
 @pytest.fixture
@@ -24,16 +29,9 @@ def client(session):
 
 @pytest.fixture(scope="session")
 def engine():
-    # Caso do windows + Docker no CI
-    import sys  # noqa: PLC0415
-
-    if sys.platform == "win32":
-        yield create_async_engine(Settings().DATABASE_URL)
-
-    else:
-        with PostgresContainer("postgres:16", driver="psycopg") as postgres:
-            _engine = create_async_engine(postgres.get_connection_url())
-            yield _engine
+    with PostgresContainer("postgres:16", driver="psycopg") as postgres:
+        _engine = create_async_engine(postgres.get_connection_url())
+        yield _engine
 
 
 @pytest_asyncio.fixture
