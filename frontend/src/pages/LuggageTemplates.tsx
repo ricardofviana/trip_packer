@@ -3,14 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { luggageRepo, type LuggageTemplate } from "@/services/repos/luggageRepo";
+import { LuggageType } from "@/types";
 
 export default function LuggageTemplatesPage() {
   const [luggage, setLuggage] = useState<LuggageTemplate[]>([]);
+  const [category, setCategory] = useState(LuggageType.BACKPACK);
   const [name, setName] = useState("");
   const [editingLuggageId, setEditingLuggageId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchLuggage = async () => {
     const response = await luggageRepo.listLuggage();
@@ -30,7 +34,7 @@ export default function LuggageTemplatesPage() {
 
   const add = async () => {
     if (!canCreate) return;
-    await luggageRepo.createLuggage({ name: name.trim(), type: "" }); // Assuming type is not critical for now
+    await luggageRepo.createLuggage({ name: name.trim(), type: category as LuggageType });
     setName("");
     fetchLuggage();
   };
@@ -57,12 +61,13 @@ export default function LuggageTemplatesPage() {
     setEditingLuggageId(null);
   };
 
+
+
   return (
     <main className="container py-10">
       <header className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Luggage templates</h1>
       </header>
-
       <section className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
@@ -71,7 +76,24 @@ export default function LuggageTemplatesPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="Carry-on" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input id="name" placeholder="Backpack" value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="space-y-2 text-left">
+              <Label htmlFor="category">Category</Label>
+              <Select
+                    value={category}
+                    onValueChange={(value) => setCategory(value as LuggageType)}
+                    disabled={isLoading}
+                  >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.values(LuggageType).map((cat: LuggageType) => (
+                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button onClick={add} disabled={!canCreate} className="w-full">Create</Button>
           </CardContent>

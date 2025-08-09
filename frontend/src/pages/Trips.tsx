@@ -88,9 +88,6 @@ export default function TripsPage() {
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Luggage className="w-8 h-8" /> Your Trips
         </h1>
-        <Button asChild variant="secondary">
-          <Link to="/">Home</Link>
-        </Button>
       </header>
 
       <section className="grid gap-6 md:grid-cols-3">

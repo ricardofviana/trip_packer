@@ -1,34 +1,35 @@
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { itemsRepo, type ItemTemplate } from "@/services/repos/itemsRepo";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ItemCategory } from "@/types";
-
-const ItemCategoryEnum = {
-  CLOTHING: "CLOTHING",
-  ELECTRONICS: "ELECTRONICS",
-  TOILETRIES: "TOILETRIES",
-  DOCUMENTS: "DOCUMENTS",
-  MEDICATION: "MEDICATION",
-  ACCESSORIES: "ACCESSORIES",
-  OTHER: "OTHER",
-} as const;
 
 export default function ItemsTemplatesPage() {
   const [items, setItems] = useState<ItemTemplate[]>([]);
   const [name, setName] = useState("");
-  const [category, setCategory] = useState<ItemCategory>(ItemCategoryEnum.CLOTHING);
-  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [category, setCategory] = useState(ItemCategory.CLOTHING);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState("");
+  const [editedCategory, setEditedCategory] = useState(ItemCategory.CLOTHING);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchItems = async () => {
-    const response = await itemsRepo.listItems();
-    console.log("ItemsTemplatesPage: API response data", response.data);
-    setItems(response.data);
+    setIsLoading(true);
+    try {
+      const response = await itemsRepo.listItems();
+      setItems(response.data);
+    } catch (error) {
+      console.error("Failed to fetch items:", error);
+      toast.error("Failed to load item templates.");
+      setItems([]); // Ensure items is always an array
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -38,39 +39,71 @@ export default function ItemsTemplatesPage() {
     fetchItems();
   }, []);
 
-  const canCreate = useMemo(() => name.trim().length > 0, [name, category]);
-  const canSave = useMemo(() => editedName.trim().length > 0, [editedName, category]);
+  const canCreate = useMemo(() => name.trim().length > 0, [name]);
+  const canSave = useMemo(() => editedName.trim().length > 0, [editedName]);
 
   const add = async () => {
     if (!canCreate) return;
-    await itemsRepo.createItem({ name: name.trim(), category});
-    setName("");
-    setCategory(ItemCategoryEnum.CLOTHING);
-    fetchItems();
+    setIsLoading(true);
+    try {
+      const newItem = { name: name.trim(), category };
+      const response = await itemsRepo.createItem(newItem);
+      setItems((prevItems) => [...prevItems, response.data]);
+      setName("");
+      setCategory(ItemCategory.CLOTHING);
+      toast.success("Item template created successfully!");
+    } catch (error) {
+      console.error("Failed to create item:", error);
+      toast.error("Failed to create item template.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const remove = async (id: string) => {
-    if (!confirm("Delete this template?")) return;
-    await itemsRepo.deleteItem(id);
-    fetchItems();
+    if (!confirm("Delete this template? This action cannot be undone.")) return;
+    setIsLoading(true);
+    try {
+      await itemsRepo.deleteItem(id);
+      setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      toast.success("Item template deleted.");
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+      toast.error("Failed to delete item template.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const startEditing = (item: ItemTemplate) => {
     setEditingItemId(item.id);
     setEditedName(item.name);
-    setCategory(item.category);
+    setEditedCategory(item.category);
   };
 
   const saveEdit = async (id: string) => {
     if (!canSave) return;
-    await itemsRepo.updateItem(id, { name: editedName.trim(), category});
-    setEditingItemId(null);
-    fetchItems();
+    setIsLoading(true);
+    try {
+      const updatedItem = { name: editedName.trim(), category: editedCategory };
+      const response = await itemsRepo.updateItem(id, updatedItem);
+      setItems((prevItems) =>
+        prevItems.map((item) => (item.id === id ? response.data : item))
+      );
+      setEditingItemId(null);
+      toast.success("Item template updated.");
+    } catch (error) {
+      console.error("Failed to save item:", error);
+      toast.error("Failed to save item template.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const cancelEdit = () => {
     setEditingItemId(null);
   };
+
 
   return (
     <main className="container py-10">
@@ -86,22 +119,34 @@ export default function ItemsTemplatesPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" placeholder="T-shirt" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input
+                id="name"
+                placeholder="T-shirt"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isLoading}
+              />
             </div>
             <div className="space-y-2 text-left">
               <Label htmlFor="category">Category</Label>
-              <Select value={category} onValueChange={(value) => setCategory(value as ItemCategory)}>
+              <Select
+                value={category}
+                onValueChange={(value) => setCategory(value as ItemCategory)}
+                disabled={isLoading}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.values(ItemCategoryEnum).map((cat) => (
+                  {Object.values(ItemCategory).map((cat) => (
                     <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={add} disabled={!canCreate} className="w-full">Create</Button>
+            <Button onClick={add} disabled={!canCreate || isLoading} className="w-full">
+              {isLoading ? "Creating..." : "Create"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -110,30 +155,56 @@ export default function ItemsTemplatesPage() {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 {editingItemId === it.id ? (
-                  <Input value={editedName} onChange={(e) => setEditedName(e.target.value)} />
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    disabled={isLoading}
+                  />
                 ) : (
                   <span>{it.name}</span>
                 )}
                 <div className="flex gap-2">
                   {editingItemId === it.id ? (
                     <>
-                      <Button variant="outline" onClick={() => saveEdit(it.id)} disabled={!canSave}>Save</Button>
-                      <Button variant="ghost" onClick={cancelEdit}>Cancel</Button>
+                      <Button variant="outline" onClick={() => saveEdit(it.id)} disabled={!canSave || isLoading}>
+                        {isLoading ? "Saving..." : "Save"}
+                      </Button>
+                      <Button variant="ghost" onClick={cancelEdit} disabled={isLoading}>
+                        Cancel
+                      </Button>
                     </>
                   ) : (
-                    <Button variant="ghost" onClick={() => startEditing(it)}>Edit</Button>
+                    <Button variant="ghost" onClick={() => startEditing(it)} disabled={isLoading}>
+                      Edit
+                    </Button>
                   )}
-                  <Button variant="ghost" onClick={() => remove(it.id)}>Delete</Button>
+                  <Button variant="ghost" onClick={() => remove(it.id)} disabled={isLoading}>
+                    Delete
+                  </Button>
                 </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {editingItemId === it.id ? (
-                null
+                <div className="space-y-2 text-left">
+                  <Label htmlFor={`category-edit-${it.id}`}>Category</Label>
+                  <Select
+                    value={editedCategory}
+                    onValueChange={(value) => setEditedCategory(value as ItemCategory)}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger id={`category-edit-${it.id}`}>
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.values(ItemCategory).map((cat) => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">Category: {it.category}</p>
-                </>
+                <p className="text-sm text-muted-foreground">Category: {it.category}</p>
               )}
               <Separator className="my-3" />
             </CardContent>

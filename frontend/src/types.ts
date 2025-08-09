@@ -1,5 +1,28 @@
 export type ID = number;
 
+export enum ItemStatus {
+  UNPACKED = "Guardar",
+  PACKED = "Guardado",
+  TO_BUY = "Comprar",
+}
+
+export enum LuggageType {
+  BACKPACK = "Mochila",
+  CARRY_ON = "Bagagem de Bordo",
+  CHECKED_MEDIUM = "Bagagem despachada 23kg",
+  CHECKED_LARGE = "Bagagem despachada 32kg",
+}
+
+export enum ItemCategory {
+  CLOTHING = "Roupas",
+  ELECTRONICS = "Eletronicos",
+  TOILETRIES = "Higiene",
+  DOCUMENTS = "Documentos",
+  MEDICATION = "Medicamentos",
+  ACCESSORIES = "Acessorios",
+  OTHER = "Outros",
+}
+
 export interface Trip {
   id: ID;
   name: string;
@@ -24,75 +47,56 @@ export interface TripUpdate {
 export interface LuggageTemplate {
   id: ID;
   name: string;
-  type: string;
+  type: LuggageType;
   created_at: string;
   updated_at: string;
 }
 
 export interface LuggageCreate {
   name: string;
-  type: string;
+  type: LuggageType;
 }
 
 export interface LuggageUpdate {
   name?: string;
-  type?: string;
+  type?: LuggageType;
 }
 
 export interface Bag {
   id: ID;
   name: string;
-  type: string;
+  type: LuggageType;
   trip_id: ID; // This is a frontend-specific context, not directly from backend LuggageResponse
   created_at: string;
   updated_at: string;
 }
 
-export type ItemStatus = "UNPACKED" | "PACKED" | "TO_BUY";
-
-export type LuggageType =
-  | "BACKPACK"
-  | "CARRY_ON"
-  | "CHECKED_MEDIUM"
-  | "CHECKED_LARGE";
-
-
-export type ItemCategory =
-  | "CLOTHING"
-  | "ELECTRONICS"
-  | "TOILETRIES"
-  | "DOCUMENTS"
-  | "MEDICATION"
-  | "ACCESSORIES"
-  | "OTHER";
 
 export interface ItemTemplate {
   id: ID;
   name: string;
-  category: string;
+  category: ItemCategory;
   created_at: string;
   updated_at: string;
 }
 
 export interface ItemCreate {
   name: string;
-  category: string;
+  category: ItemCategory;
 }
 
 export interface ItemUpdate {
   name?: string;
-  category?: string;
+  category?: ItemCategory;
 }
 
 export interface LuggageItemCreate {
   item_id: ID;
   quantity?: number;
-  notes?: string;
 }
 
 export interface LuggageItemUpdate {
   quantity?: number;
-  notes?: string;
   luggage_id?: ID;
   name?: string;
 }
@@ -105,9 +109,8 @@ export interface Item {
   id: ID; // Corresponds to item_id in LuggageItemResponse
   name: string;
   quantity: number;
-  category: string;
-  notes: string;
-  is_packed: boolean;
+  category: ItemCategory;
+  status: ItemStatus;
   created_at: string;
   updated_at: string;
 }

@@ -14,7 +14,6 @@ import { packingRepo } from "@/services/repos/packingRepo";
 import { tripLuggageRepo } from "@/services/repos/tripLuggageRepo";
 import type { Bag, Item, ItemStatus, Trip } from "@/types";
 
-const STATUS_OPTIONS: ItemStatus[] = ["UNPACKED", "PACKED", "TO_BUY"];
 
 export default function TripDetailPage() {
   const { tripId } = useParams();

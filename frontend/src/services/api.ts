@@ -1,5 +1,4 @@
 import axios from "axios";
-import axios from "axios";
 import type { ID, Trip, TripCreate, TripUpdate, LuggageTemplate, LuggageCreate, LuggageUpdate, ItemTemplate, Item, ItemCreate, ItemUpdate, LuggageItemCreate, LuggageItemUpdate, LuggageItemStatusUpdate } from "@/types";
 
 const api = axios.create({

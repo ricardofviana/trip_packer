@@ -1,61 +1,50 @@
-# Welcome to your project
+# Trip Packer Frontend
 
-## How can I edit this code?
+This is the frontend for Trip Packer, a modern web application for planning and organizing your trips.
 
-There are several ways of editing your application.
+## Technologies
 
-**Use your preferred IDE**
+The frontend is built with a modern and robust stack:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes.
+- **Framework:** [React](https://react.dev/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
+- **Component Library:** [shadcn/ui](https://ui.shadcn.com/)
+- **Routing:** [React Router](https://reactrouter.com/)
+- **Language:** [TypeScript](https://www.typescriptlang.org/)
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Project Structure
 
-Follow these steps:
+The project is organized into the following directories:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- `src/components`: Reusable UI components.
+- `src/pages`: Application pages, each corresponding to a specific route.
+- `src/services`: Services for interacting with the backend API.
+- `src/lib`: Utility functions.
+- `src/hooks`: Custom React hooks.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Getting Started
 
-# Step 3: Install the necessary dependencies.
-npm i
+To get started with the project, follow these steps:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+1. **Install dependencies:**
 
-**Edit a file directly in GitHub**
+   ```bash
+   npm install
+   ```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+2. **Run the development server:**
 
-**Use GitHub Codespaces**
+   ```bash
+   npm run dev
+   ```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. **Build for production:**
 
-## What technologies are used for this project?
+   ```bash
+   npm run build
+   ```
 
-This project is built with:
+## Design
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-## Can I connect a custom domain to my project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The project follows a component-based architecture, with a clear separation of concerns between pages, components, and services. The UI is built with shadcn/ui, a modern and accessible component library that provides a solid foundation for building a beautiful and user-friendly application.

@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN rm -rf node_modules package-lock.json && npm install
+RUN npm run build:docker
 
 COPY . .
 
