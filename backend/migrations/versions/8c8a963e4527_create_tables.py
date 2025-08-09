@@ -55,7 +55,7 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['item_id'], ['items.id'], ),
-    sa.ForeignKeyConstraint(['luggage_id'], ['bag.id'], ),
+    sa.ForeignKeyConstraint(['luggage_id'], ['luggage.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('luggage_trip',
@@ -64,7 +64,7 @@ def upgrade() -> None:
     sa.Column('trip_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
-    sa.ForeignKeyConstraint(['luggage_id'], ['bag.id'], ),
+    sa.ForeignKeyConstraint(['luggage_id'], ['luggage.id'], ),
     sa.ForeignKeyConstraint(['trip_id'], ['trips.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
