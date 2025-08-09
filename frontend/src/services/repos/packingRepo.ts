@@ -1,10 +1,9 @@
-import type { ID, Item, LuggageItemCreate, LuggageItemUpdate, LuggageItemStatusUpdate } from "@/types";
-import { getItemsInLuggage, addItemToLuggage, updateItemInLuggage, removeItemFromLuggage, updatePackingStatus } from "@/services/api";
+import type { ID, PackingItem, PackingCreate, PackingUpdate } from "@/types";
+import { getPackingList, addItemToPackingList, updatePackingListItem, removeItemFromPackingList } from "@/services/api";
+
 
 export const packingRepo = {
-  listLuggageItems: getItemsInLuggage as (luggageId: ID) => Promise<{ data: Item[] }>,
-  addLuggageItem: addItemToLuggage as (luggageId: ID, data: LuggageItemCreate) => Promise<{ data: Item }>,
-  updateLuggageItem: updateItemInLuggage as (luggageId: ID, itemId: ID, data: LuggageItemUpdate) => Promise<{ data: Item }>,
-  updateLuggageItemStatus: updatePackingStatus as (luggageId: ID, itemId: ID, data: LuggageItemStatusUpdate) => Promise<{ data: Item }>,
-  deleteLuggageItem: removeItemFromLuggage as (luggageId: ID, itemId: ID) => Promise<any>,
-};
+  getPackingList: getPackingList as (tripId: ID) => Promise<{ data: PackingItem[] }>,
+  addItemToPackingList: addItemToPackingList as (tripId: ID, data: PackingCreate) => Promise<{ data: PackingItem }>,
+  updatePackingListItem: updatePackingListItem as (tripId: ID, itemId: ID, data: PackingUpdate) => Promise<{ data: PackingItem }>,
+  removeItemFromPackingList: removeItemFromPackingList as (tripId: ID, itemId: ID) => Promise<any>};

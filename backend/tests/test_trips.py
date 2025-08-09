@@ -69,6 +69,8 @@ def test_get_single_trip(client):
     assert data["end_date"] == "2024-09-22"
     assert "created_at" in data
     assert "updated_at" in data
+    assert "bags" in data
+    assert "packing_list" in data
 
 
 def test_get_nonexistent_trip(client):
@@ -156,86 +158,86 @@ def test_delete_nonexistent_trip(client):
     assert "not found" in response.json()["detail"]
 
 
-def test_get_trip_luggage_empty(client):
-    """Test getting bag for a trip with no bag."""
+def test_get_trip_bags_empty(client):
+    """Test getting bags for a trip with no bags."""
     # Create a trip
     trip_data = {"name": "Empty Trip", "start_date": "2024-03-01", "end_date": "2024-03-05"}
     create_response = client.post("/api/trips/", json=trip_data)
     created_trip = create_response.json()
     trip_id = created_trip["id"]
 
-    # Get bag for the trip
-    response = client.get(f"/api/trips/{trip_id}/bag")
+    # Get bags for the trip
+    response = client.get(f"/api/trips/{trip_id}/bags")
 
     assert response.status_code == HTTPStatus.OK
     data = response.json()
     assert data == []  # Should be empty
 
 
-def test_get_trip_luggage_nonexistent_trip(client):
-    """Test getting bag for a trip that doesn't exist."""
-    response = client.get("/api/trips/999/bag")
+def test_get_trip_bags_nonexistent_trip(client):
+    """Test getting bags for a trip that doesn't exist."""
+    response = client.get("/api/trips/999/bags")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "not found" in response.json()["detail"]
 
 
-def test_add_luggage_to_trip(client):
-    """Test adding bag to a trip."""
+def test_add_bag_to_trip(client):
+    """Test adding a bag to a trip."""
     # Create a trip
     trip_data = {"name": "Bag Trip", "start_date": "2024-04-01", "end_date": "2024-04-05"}
     trip_response = client.post("/api/trips/", json=trip_data)
     trip_id = trip_response.json()["id"]
 
     # Create bag
-    luggage_data = {"name": "Travel Backpack", "type": "BACKPACK"}
-    luggage_response = client.post("/api/bag/", json=luggage_data)
-    luggage_id = luggage_response.json()["id"]
+    bag_data = {"name": "Travel Backpack", "type": "BACKPACK"}
+    bag_response = client.post("/api/bags/", json=bag_data)
+    bag_id = bag_response.json()["id"]
 
     # Add bag to trip
-    response = client.post(f"/api/trips/{trip_id}/bag/{luggage_id}")
+    response = client.post(f"/api/trips/{trip_id}/bags/{bag_id}")
 
     assert response.status_code == HTTPStatus.CREATED
     data = response.json()
-    assert "added to trip" in data["message"]
+    assert data["id"] == bag_id
 
     # Verify bag is associated with trip
-    luggage_response = client.get(f"/api/trips/{trip_id}/bag")
-    assert luggage_response.status_code == HTTPStatus.OK
-    luggage_data = luggage_response.json()
-    assert len(luggage_data) == 1
-    assert luggage_data[0]["id"] == luggage_id
+    bags_response = client.get(f"/api/trips/{trip_id}/bags")
+    assert bags_response.status_code == HTTPStatus.OK
+    bags_data = bags_response.json()
+    assert len(bags_data) == 1
+    assert bags_data[0]["id"] == bag_id
 
 
-def test_add_luggage_to_nonexistent_trip(client):
-    """Test adding bag to a trip that doesn't exist."""
+def test_add_bag_to_nonexistent_trip(client):
+    """Test adding a bag to a trip that doesn't exist."""
     # Create bag
-    luggage_data = {"name": "Orphan Bag", "type": "CARRY_ON"}
-    luggage_response = client.post("/api/bag/", json=luggage_data)
-    luggage_id = luggage_response.json()["id"]
+    bag_data = {"name": "Orphan Bag", "type": "CARRY_ON"}
+    bag_response = client.post("/api/bags/", json=bag_data)
+    bag_id = bag_response.json()["id"]
 
     # Try to add bag to nonexistent trip
-    response = client.post(f"/api/trips/999/bag/{luggage_id}")
+    response = client.post(f"/api/trips/999/bags/{bag_id}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "Trip with id 999 not found" in response.json()["detail"]
 
 
-def test_add_nonexistent_luggage_to_trip(client):
-    """Test adding nonexistent bag to a trip."""
+def test_add_nonexistent_bag_to_trip(client):
+    """Test adding a nonexistent bag to a trip."""
     # Create a trip
     trip_data = {"name": "Lonely Trip", "start_date": "2024-02-01", "end_date": "2024-02-05"}
     trip_response = client.post("/api/trips/", json=trip_data)
     trip_id = trip_response.json()["id"]
 
     # Try to add nonexistent bag to trip
-    response = client.post(f"/api/trips/{trip_id}/bag/999")
+    response = client.post(f"/api/trips/{trip_id}/bags/999")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "Bag with id 999 not found" in response.json()["detail"]
 
 
-def test_add_duplicate_luggage_to_trip(client):
+def test_add_duplicate_bag_to_trip(client):
     """Test adding the same bag to a trip twice."""
     # Create a trip
     trip_data = {"name": "Duplicate Test Trip", "start_date": "2024-01-15", "end_date": "2024-01-20"}
@@ -243,46 +245,46 @@ def test_add_duplicate_luggage_to_trip(client):
     trip_id = trip_response.json()["id"]
 
     # Create bag
-    luggage_data = {"name": "Duplicate Bag", "type": "CHECKED_MEDIUM"}
-    luggage_response = client.post("/api/bag/", json=luggage_data)
-    luggage_id = luggage_response.json()["id"]
+    bag_data = {"name": "Duplicate Bag", "type": "CHECKED_MEDIUM"}
+    bag_response = client.post("/api/bags/", json=bag_data)
+    bag_id = bag_response.json()["id"]
 
     # Add bag to trip first time
-    first_response = client.post(f"/api/trips/{trip_id}/bag/{luggage_id}")
+    first_response = client.post(f"/api/trips/{trip_id}/bags/{bag_id}")
     assert first_response.status_code == HTTPStatus.CREATED
 
     # Try to add the same bag again
-    second_response = client.post(f"/api/trips/{trip_id}/bag/{luggage_id}")
+    second_response = client.post(f"/api/trips/{trip_id}/bags/{bag_id}")
     assert second_response.status_code == HTTPStatus.CONFLICT
     assert "already associated" in second_response.json()["detail"]
 
 
-def test_remove_luggage_from_trip(client):
-    """Test removing bag from a trip."""
+def test_remove_bag_from_trip(client):
+    """Test removing a bag from a trip."""
     # Create a trip and bag, then associate them
     trip_data = {"name": "Trip with Bag", "start_date": "2024-05-01", "end_date": "2024-05-05"}
     trip_response = client.post("/api/trips/", json=trip_data)
     trip_id = trip_response.json()["id"]
 
-    luggage_data = {"name": "Bag to Remove", "type": "BACKPACK"}
-    luggage_response = client.post("/api/bag/", json=luggage_data)
-    luggage_id = luggage_response.json()["id"]
+    bag_data = {"name": "Bag to Remove", "type": "BACKPACK"}
+    bag_response = client.post("/api/bags/", json=bag_data)
+    bag_id = bag_response.json()["id"]
 
-    client.post(f"/api/trips/{trip_id}/bag/{luggage_id}")
+    client.post(f"/api/trips/{trip_id}/bags/{bag_id}")
 
     # Remove bag from trip
-    response = client.delete(f"/api/trips/{trip_id}/bag/{luggage_id}")
+    response = client.delete(f"/api/trips/{trip_id}/bags/{bag_id}")
 
     assert response.status_code == HTTPStatus.OK
     assert "removed from trip" in response.json()["message"]
 
     # Verify bag is no longer associated with trip
-    get_response = client.get(f"/api/trips/{trip_id}/bag")
+    get_response = client.get(f"/api/trips/{trip_id}/bags")
     assert get_response.status_code == HTTPStatus.OK
     assert get_response.json() == []
 
 
-def test_remove_nonexistent_luggage_from_trip(client):
+def test_remove_nonexistent_bag_from_trip(client):
     """Test removing a nonexistent bag from a trip."""
     # Create a trip
     trip_data = {"name": "Trip for Nonexistent Bag", "start_date": "2024-06-01", "end_date": "2024-06-05"}
@@ -290,21 +292,21 @@ def test_remove_nonexistent_luggage_from_trip(client):
     trip_id = trip_response.json()["id"]
 
     # Try to remove nonexistent bag
-    response = client.delete(f"/api/trips/{trip_id}/bag/999")
+    response = client.delete(f"/api/trips/{trip_id}/bags/999")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "Bag with id 999 is not associated with trip" in response.json()["detail"]
 
 
-def test_remove_luggage_from_nonexistent_trip(client):
-    """Test removing bag from a nonexistent trip."""
+def test_remove_bag_from_nonexistent_trip(client):
+    """Test removing a bag from a nonexistent trip."""
     # Create bag
-    luggage_data = {"name": "Orphan Bag 2", "type": "CARRY_ON"}
-    luggage_response = client.post("/api/bag/", json=luggage_data)
-    luggage_id = luggage_response.json()["id"]
+    bag_data = {"name": "Orphan Bag 2", "type": "CARRY_ON"}
+    bag_response = client.post("/api/bags/", json=bag_data)
+    bag_id = bag_response.json()["id"]
 
     # Try to remove bag from nonexistent trip
-    response = client.delete(f"/api/trips/999/bag/{luggage_id}")
+    response = client.delete(f"/api/trips/999/bags/{bag_id}")
 
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert "Bag with id" in response.json()["detail"]

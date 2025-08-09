@@ -6,5 +6,5 @@ export const itemsRepo = {
   getItem: getItem as (id: ID) => Promise<{ data: ItemTemplate }>,
   createItem: createItem as (input: { name: string; category: ItemCategory }) => Promise<{ data: ItemTemplate }>,
   updateItem: updateItem as (id: ID, patch: { name?: string; category?: ItemCategory }) => Promise<{ data: ItemTemplate }>,
-  deleteItem: deleteItem as (id: ID) => Promise<void>,
+  deleteItem: (id: ID) => api.delete(`/item/${id}`)
 };

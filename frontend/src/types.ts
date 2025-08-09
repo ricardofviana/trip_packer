@@ -1,26 +1,28 @@
 export type ID = number;
 
 export enum ItemStatus {
-  UNPACKED = "Guardar",
-  PACKED = "Guardado",
-  TO_BUY = "Comprar",
+  UNPACKED = "UNPACKED",
+  PACKED = "PACKED",
+  TO_BUY = "TO_BUY",
 }
 
-export enum LuggageType {
-  BACKPACK = "Mochila",
-  CARRY_ON = "Bagagem de Bordo",
-  CHECKED_MEDIUM = "Bagagem despachada 23kg",
-  CHECKED_LARGE = "Bagagem despachada 32kg",
+export enum BagType {
+  CHECKED = "CHECKED",
+  CARRY_ON = "CARRY_ON",
+  BACKPACK = "BACKPACK",
+  DUFFEL = "DUFFEL",
+  TOTE = "TOTE",
+  OTHER = "OTHER",
 }
 
 export enum ItemCategory {
-  CLOTHING = "Roupas",
-  ELECTRONICS = "Eletronicos",
-  TOILETRIES = "Higiene",
-  DOCUMENTS = "Documentos",
-  MEDICATION = "Medicamentos",
-  ACCESSORIES = "Acessorios",
-  OTHER = "Outros",
+  CLOTHING = "CLOTHING",
+  ELECTRONICS = "ELECTRONICS",
+  TOILETRIES = "TOILETRIES",
+  DOCUMENTS = "DOCUMENTS",
+  MEDICATION = "MEDICATION",
+  ACCESSORIES = "ACCESSORIES",
+  OTHER = "OTHER",
 }
 
 export interface Trip {
@@ -44,33 +46,30 @@ export interface TripUpdate {
   end_date?: string;
 }
 
-export interface LuggageTemplate {
+export interface BagTemplate {
   id: ID;
   name: string;
-  type: LuggageType;
+  type: BagType;
   created_at: string;
   updated_at: string;
 }
 
-export interface LuggageCreate {
+export interface BagTemplateCreate {
   name: string;
-  type: LuggageType;
+  type: BagType;
 }
 
-export interface LuggageUpdate {
+export interface BagTemplateUpdate {
   name?: string;
-  type?: LuggageType;
+  type?: BagType;
 }
 
-export interface Bag {
-  id: ID;
-  name: string;
-  type: LuggageType;
-  trip_id: ID; // This is a frontend-specific context, not directly from backend LuggageResponse
+export interface TripBag {
+  trip_id: ID;
+  bag_id: ID;
   created_at: string;
   updated_at: string;
 }
-
 
 export interface ItemTemplate {
   id: ID;
@@ -90,28 +89,34 @@ export interface ItemUpdate {
   category?: ItemCategory;
 }
 
-export interface LuggageItemCreate {
+export interface PackingItem {
+  id: ID;
+  trip_id: ID;
   item_id: ID;
-  quantity?: number;
-}
-
-export interface LuggageItemUpdate {
-  quantity?: number;
-  luggage_id?: ID;
-  name?: string;
-}
-
-export interface LuggageItemStatusUpdate {
-  is_packed: boolean;
-}
-
-export interface Item {
-  id: ID; // Corresponds to item_id in LuggageItemResponse
-  name: string;
+  bag_id?: ID;
   quantity: number;
-  category: ItemCategory;
-  is_packed: boolean; // Added for direct status tracking
   status: ItemStatus;
   created_at: string;
   updated_at: string;
+  // Nested objects for detailed response
+  item: ItemTemplate;
+  bag?: BagTemplate;
+}
+
+export interface PackingCreate {
+  item_id: ID;
+  bag_id?: ID;
+  quantity?: number;
+  status?: ItemStatus;
+}
+
+export interface PackingUpdate {
+  bag_id?: ID;
+  quantity?: number;
+  status?: ItemStatus;
+}
+
+export interface TripDetail extends Trip {
+  bags: BagTemplate[]; // Bags associated with this trip
+  packing_list: PackingItem[]; // Packing items for this trip
 }

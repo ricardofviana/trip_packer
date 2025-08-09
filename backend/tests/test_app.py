@@ -9,7 +9,7 @@ def test_read_root():
     client = TestClient(app)
     response = client.get("/")
     assert response.status_code == HTTPStatus.OK
-    assert response.json() == {"message": "Welcome to Trip Tracker!"}
+    assert response.json() == {"message": "Welcome to Trip Packer!"}
 
 
 def test_health_check():

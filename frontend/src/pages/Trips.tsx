@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Bag } from "lucide-react";
+//import { Bag } from "lucide-react";
 import { tripsRepo } from "@/services/repos/tripsRepo";
 import type { Trip } from "@/types";
 
