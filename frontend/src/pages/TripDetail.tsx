@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { tripsRepo } from "@/services/repos/tripsRepo";
-import { BagTemplate, ItemTemplate, PackingItem, TripDetail as TripDetailType } from "@/types";
+import { BagTemplate, ItemTemplate, PackingItem, TripDetail as TripDetailType, ItemStatus } from "@/types";
 import { BagTemplatesManager } from "@/components/BagTemplatesManager";
 import { PackingListManager } from "@/components/PackingListManager";
 
