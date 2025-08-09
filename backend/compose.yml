@@ -12,7 +12,7 @@ services:
 
   trip_packer_app:
     image: trip_packer_app
-    entrypoint: ./entrypoint.sh
+    entrypoint: ["./entrypoint.sh"]
     build: .
     ports:
       - "8000:8000"

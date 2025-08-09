@@ -1,8 +1,10 @@
 FROM python:3.13-alpine3.21
 ENV POETRY_VIRTUALENVS_CREATE=false
 
-WORKDIR app/
+WORKDIR /app/
 COPY . .
+
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 RUN pip install poetry
 
