@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from trip_packer.models import ItemCategory, LuggageType
+from trip_packer.models import ItemCategory, ItemStatus, LuggageType
 
 
 class Message(BaseModel):
@@ -41,21 +41,21 @@ class TripResponse(BaseModel):
 
 
 # Bag schemas for CRUD operations
-class LuggageCreate(BaseModel):
+class BagCreate(BaseModel):
     """Schema for creating new bag"""
 
     name: str
     type: LuggageType
 
 
-class LuggageUpdate(BaseModel):
+class BagUpdate(BaseModel):
     """Schema for updating existing bag"""
 
     name: Optional[str] = None
     type: Optional[LuggageType] = None
 
 
-class LuggageResponse(BaseModel):
+class BagResponse(BaseModel):
     """Schema for bag responses"""
 
     id: int
@@ -65,13 +65,6 @@ class LuggageResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
-
-
-# Keep backward compatibility
-class Bag(BaseModel):
-    id: int
-    name: str
-    type: str
 
 
 # Item schemas for CRUD operations
@@ -101,37 +94,81 @@ class ItemResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class LuggageItemCreate(BaseModel):
-    """Schema for adding an item to bag"""
+# TripBag schemas
+class TripBagCreate(BaseModel):
+    """Schema for associating a bag with a trip"""
 
-    item_id: int
-    quantity: Optional[int] = 1
-    notes: Optional[str] = ""
-
-
-class LuggageItemUpdate(BaseModel):
-    """Schema for updating an item in bag"""
-
-    quantity: Optional[int] = None
-    notes: Optional[str] = None
+    bag_id: int
 
 
-class LuggageItemStatusUpdate(BaseModel):
-    """Schema for updating packing status"""
+class TripBagResponse(BaseModel):
+    """Schema for trip-bag association responses"""
 
-    is_packed: bool
-
-
-class LuggageItemResponse(BaseModel):
-    """Response schema for items in bag"""
-
-    item_id: int
-    name: str
-    category: ItemCategory
-    quantity: int
-    notes: str
-    is_packed: bool
+    trip_id: int
+    bag_id: int
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Packing schemas
+class PackingCreate(BaseModel):
+    """Schema for creating a packing entry"""
+
+    item_id: int
+    bag_id: Optional[int] = None
+    quantity: Optional[int] = 1
+    status: Optional[ItemStatus] = ItemStatus.UNPACKED
+
+
+class PackingUpdate(BaseModel):
+    """Schema for updating a packing entry"""
+
+    bag_id: Optional[int] = None
+    quantity: Optional[int] = None
+    status: Optional[ItemStatus] = None
+
+
+class PackingResponse(BaseModel):
+    """Schema for packing responses"""
+
+    id: int
+    trip_id: int
+    item_id: int
+    bag_id: Optional[int]
+    quantity: int
+    status: ItemStatus
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Detailed response schemas for frontend
+class PackingDetailResponse(BaseModel):
+    """Schema for detailed packing responses including related objects"""
+
+    id: int
+    trip_id: int
+    item_id: int
+    bag_id: Optional[int]
+    quantity: int
+    status: ItemStatus
+    created_at: datetime
+    updated_at: datetime
+
+    # Related objects
+    item: ItemResponse
+    bag: Optional[BagResponse] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TripDetailResponse(TripResponse):
+    """Schema for detailed trip responses including bags and packing lists"""
+
+    bags: list[BagResponse]
+    packing_list: list[PackingDetailResponse]
 
     model_config = ConfigDict(from_attributes=True)

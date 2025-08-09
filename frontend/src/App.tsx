@@ -9,8 +9,7 @@ import NotFound from "./pages/NotFound";
 import TripsPage from "./pages/Trips";
 import TripDetailPage from "./pages/TripDetail";
 import ItemsTemplatesPage from "./pages/ItemsTemplates";
-import LuggageTemplatesPage from "./pages/LuggageTemplates";
-import TripsPackingPage from "./pages/TripsPacking";
+import BagTemplatesPage from "./pages/BagTemplates";
 import LearnMorePage from "./pages/LearnMore";
 
 const queryClient = new QueryClient();
@@ -27,8 +26,7 @@ const App = () => (
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:tripId" element={<TripDetailPage />} />
           <Route path="/items" element={<ItemsTemplatesPage />} />
-          <Route path="/bag" element={<LuggageTemplatesPage />} />
-          <Route path="/trips-packing" element={<TripsPackingPage />} />
+          <Route path="/bags" element={<BagTemplatesPage />} />
           <Route path="/learn-more" element={<LearnMorePage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

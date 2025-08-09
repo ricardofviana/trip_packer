@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
 import { itemsRepo } from '@/services/repos/itemsRepo';
@@ -8,18 +9,29 @@ import ItemsTemplatesPage from './ItemsTemplates';
 vi.mock('@/services/repos/itemsRepo');
 
 describe('ItemsTemplatesPage', () => {
-  test('should render the page title and the create form', () => {
+  test('should render the page title and the create form', async () => {
     // Arrange: Mock an empty list of items for the initial load
     vi.mocked(itemsRepo.listItems).mockResolvedValue({ data: [] });
 
     // Act
     render(<ItemsTemplatesPage />);
 
+    // Wait for initial loading to complete
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
+    });
+
+    // Simulate typing a name to enable the create button
+    const nameInput = screen.getByLabelText(/name/i);
+    await userEvent.type(nameInput, 'Test Item');
+
     // Assert
-    expect(screen.getByRole('heading', { name: /item templates/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /create item template/i })).toBeInTheDocument();
-    expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /create/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /item templates/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create item template/i })).toBeInTheDocument();
+      expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /create/i })).not.toBeDisabled();
+    });
   });
 
   test('should fetch and display a list of existing items', async () => {

@@ -20,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 api_router = APIRouter(prefix="/api")
 
 api_router.include_router(items.router)
@@ -32,7 +33,7 @@ app.include_router(api_router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Trip Tracker!"}
+    return {"message": "Welcome to Trip Packer!"}
 
 
 @app.get("/health")
