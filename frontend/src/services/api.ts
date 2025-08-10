@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ID, Trip, TripCreate, TripUpdate, BagTemplate, BagTemplateCreate, BagTemplateUpdate, TripBag, PackingItem, PackingCreate, PackingUpdate } from "@/types";
+import type { ID, Trip, TripCreate, TripUpdate, BagTemplate, BagTemplateCreate, BagTemplateUpdate, PackingItem, PackingCreate, PackingUpdate } from "@/types";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL + "/api",

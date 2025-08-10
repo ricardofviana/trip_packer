@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ItemTemplate, PackingItem, ID, ItemStatus, BagTemplate } from "@/types";
+import { ItemTemplate, PackingItem, ID, ItemStatus } from "@/types";
 import { itemsRepo } from "@/services/repos/itemsRepo";
 import { packingRepo } from "@/services/repos/packingRepo";
 
@@ -98,19 +95,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  const handleAssignBagToPackingItem = async (item: PackingItem, bagId: ID | undefined) => {
-    setIsLoading(true);
-    try {
-      await packingRepo.updatePackingListItem(tripId, item.item.id, { bag_id: bagId });
-      toast.success("Packing item assigned to bag!");
-      refreshTripDetails();
-    } catch (error) {
-      console.error("Failed to assign bag to packing item:", error);
-      toast.error("Failed to assign bag to packing item.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   const groupedPackingList = packingList.reduce((acc, item) => {
     const bagName = item.bag ? item.bag.name : "Unassigned Items";
@@ -121,12 +106,8 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     return acc;
   }, {} as Record<string, PackingItem[]>);
 
-  const tripBags = packingList.reduce((acc, item) => {
-    if (item.bag && !acc.some(bag => bag.id === item.bag?.id)) {
-      acc.push(item.bag);
-    }
-    return acc;
-  }, [] as BagTemplate[]);
+  
+
 
   return (
     <div className="grid gap-4">
@@ -170,16 +151,6 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
             {itemsInBag.map((item) => (
               <div key={item.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                 <div className="flex items-center gap-2">
-                  <Checkbox
-                    checked={item.status === ItemStatus.PACKED}
-                    onCheckedChange={(checked) =>
-                      handleUpdatePackingItemStatus(
-                        item,
-                        checked ? ItemStatus.PACKED : ItemStatus.UNPACKED
-                      )
-                    }
-                    disabled={isLoading}
-                  />
                   <span>{item.item.name}</span>
                   <Input
                     type="number"
@@ -189,7 +160,6 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
                     min="1"
                     disabled={isLoading}
                   />
-                  <Label>x</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Select
@@ -197,33 +167,6 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
                     onValueChange={(value) => handleUpdatePackingItemStatus(item, value as ItemStatus)}
                     disabled={isLoading}
                   >
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.values(ItemStatus).map((status) => (
-                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={item.bag_id?.toString() || "unassigned"}
-                    onValueChange={(value) =>
-                      handleAssignBagToPackingItem(item, value === "unassigned" ? undefined : parseInt(value))
-                    }
-                    disabled={isLoading}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Assign to Bag" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unassigned">Unassigned</SelectItem>
-                      {tripBags.map((bag) => (
-                        <SelectItem key={bag.id} value={bag.id.toString()}>
-                          {bag.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
                   </Select>
                   <Button
                     variant="ghost"
