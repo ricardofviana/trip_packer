@@ -3,7 +3,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { tripsRepo } from "@/services/repos/tripsRepo";
+import { packingRepo } from "@/services/repos/packingRepo";
 import { TripDetail as TripDetailType, ItemStatus } from "@/types";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { TripBagsDisplay } from "@/components/TripBagsDisplay";
+import { TripPackingListDisplay } from "@/components/TripPackingListDisplay";
 import { BagTemplatesManager } from "@/components/BagTemplatesManager";
 import { PackingListManager } from "@/components/PackingListManager";
 
@@ -27,6 +32,29 @@ export default function TripDetailPage() {
       setIsLoading(false);
     }
   }, [tripId]);
+
+  const handleQuantityChange = useCallback(async (packingItemId: number, newQuantity: number) => {
+    if (newQuantity < 1) return; // Prevent quantity from going below 1
+    try {
+      await packingRepo.updatePackingItem(packingItemId, { quantity: newQuantity });
+      toast.success("Item quantity updated.");
+      refreshTripDetails(); // Refresh to get updated data
+    } catch (error) {
+      console.error("Failed to update item quantity:", error);
+      toast.error("Failed to update item quantity.");
+    }
+  }, [refreshTripDetails]);
+
+  const handleRemoveItem = useCallback(async (packingItemId: number) => {
+    try {
+      await packingRepo.deletePackingItem(packingItemId);
+      toast.success("Item removed from packing list.");
+      refreshTripDetails(); // Refresh to get updated data
+    } catch (error) {
+      console.error("Failed to remove item:", error);
+      toast.error("Failed to remove item.");
+    }
+  }, [refreshTripDetails]);
 
   useEffect(() => {
     refreshTripDetails();
@@ -67,15 +95,27 @@ export default function TripDetailPage() {
         </div>
       </header>
 
-      <section className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">Bags for this Trip</h2>
-        <BagTemplatesManager tripId={trip.id} bags={trip.bags} refreshTripDetails={refreshTripDetails} />
-      </section>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10">
+        {/* Bags Section */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Bags for this Trip</h2>
+          <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <TripBagsDisplay bags={trip.bags} />
+          </ScrollArea>
+        </section>
 
-      <section className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">Packing List</h2>
-        <PackingListManager tripId={trip.id} packingList={trip.packing_list} refreshTripDetails={refreshTripDetails} />
-      </section>
+        {/* Packing List Section */}
+        <section>
+          <h2 className="text-2xl font-bold mb-4">Packing List</h2>
+          <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+            <TripPackingListDisplay
+              packingList={trip.packing_list}
+              onQuantityChange={handleQuantityChange}
+              onRemoveItem={handleRemoveItem}
+            />
+          </ScrollArea>
+        </section>
+      </div>
     </main>
   );
 }
