@@ -10,12 +10,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
-      proxy: {
-        "/api": {
-          target: env.VITE_API_PROXY_TARGET,
-          changeOrigin: true,
-        },
-      },
+      
     },
     resolve: {
       alias: {

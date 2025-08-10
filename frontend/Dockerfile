@@ -13,11 +13,8 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Copy the appropriate environment file for Docker builds
-COPY .env.docker .env
-
 # Set environment variable and build the application
-RUN echo "VITE_API_PROXY_TARGET: $VITE_API_PROXY_TARGET" && VITE_DEBUG=true npm run build:docker
+# RUN VITE_DEBUG=true npm run build:docker
 
 EXPOSE 8080
 

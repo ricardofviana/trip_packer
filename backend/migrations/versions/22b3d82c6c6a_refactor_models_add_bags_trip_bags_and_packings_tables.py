@@ -46,7 +46,7 @@ def upgrade() -> None:
         sa.Column('item_id', sa.Integer(), nullable=False),
         sa.Column('bag_id', sa.Integer(), nullable=True),
         sa.Column('quantity', sa.Integer(), nullable=False),
-        sa.Column('status', sa.Enum('UNPACKED', 'PACKED', 'TO_BUY', name='itemstatus', create_type=False), nullable=False),
+        sa.Column('status', sa.Enum('UNPACKED', 'PACKED', 'TO_BUY', name='itemstatus'), nullable=False),
         sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
         sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
         sa.ForeignKeyConstraint(['trip_id'], ['trips.id'], ),
