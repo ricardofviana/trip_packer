@@ -4,30 +4,32 @@ import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { tripsRepo } from "@/services/repos/tripsRepo";
 import { packingRepo } from "@/services/repos/packingRepo";
+import { itemsRepo } from "@/services/repos/itemsRepo";
 import { TripDetail as TripDetailType, ItemStatus } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { TripBagsDisplay } from "@/components/TripBagsDisplay";
 import { TripPackingListDisplay } from "@/components/TripPackingListDisplay";
-import { BagTemplatesManager } from "@/components/BagTemplatesManager";
-import { PackingListManager } from "@/components/PackingListManager";
 
 export default function TripDetailPage() {
   const { tripId } = useParams();
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState<TripDetailType | undefined>();
+  const [allItems, setAllItems] = useState<ItemTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const refreshTripDetails = useCallback(async () => {
     if (!tripId) return;
     setIsLoading(true);
     try {
-      const response = await tripsRepo.getTrip(tripId);
-      setTrip(response.data);
+      const tripResponse = await tripsRepo.getTrip(tripId);
+      setTrip(tripResponse.data);
+
+      const itemsResponse = await itemsRepo.listItems();
+      setAllItems(itemsResponse.data);
     } catch (error) {
-      console.error("Failed to fetch trip details:", error);
-      toast.error("Failed to load trip details.");
+      console.error("Failed to fetch trip details or items:", error);
+      toast.error("Failed to load trip details or items.");
     } finally {
       setIsLoading(false);
     }
@@ -46,15 +48,28 @@ export default function TripDetailPage() {
   }, [refreshTripDetails]);
 
   const handleRemoveItem = useCallback(async (packingItemId: number) => {
+    if (!tripId) return;
     try {
-      await packingRepo.deletePackingItem(packingItemId);
+      await packingRepo.removeItemFromPackingList(parseInt(tripId), packingItemId);
       toast.success("Item removed from packing list.");
       refreshTripDetails(); // Refresh to get updated data
     } catch (error) {
       console.error("Failed to remove item:", error);
       toast.error("Failed to remove item.");
     }
-  }, [refreshTripDetails]);
+  }, [tripId, refreshTripDetails]);
+
+  const handleAddItem = useCallback(async (itemId: number) => {
+    if (!tripId) return;
+    try {
+      await packingRepo.addItemToPackingList(parseInt(tripId), { item_id: itemId, quantity: 1 }); // Default quantity to 1
+      toast.success("Item added to packing list.");
+      refreshTripDetails(); // Refresh to get updated data
+    } catch (error) {
+      console.error("Failed to add item:", error);
+      toast.error("Failed to add item.");
+    }
+  }, [tripId, refreshTripDetails]);
 
   useEffect(() => {
     refreshTripDetails();
@@ -106,12 +121,14 @@ export default function TripDetailPage() {
 
         {/* Packing List Section */}
         <section>
-          <h2 className="text-2xl font-bold mb-4">Packing List</h2>
+          <h2 className="text-2xl font-bold mb-4">Items for this Trip</h2>
           <ScrollArea className="h-[400px] w-full rounded-md border p-4">
             <TripPackingListDisplay
               packingList={trip.packing_list}
+              allItems={allItems}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}
+              onAddItem={handleAddItem}
             />
           </ScrollArea>
         </section>
