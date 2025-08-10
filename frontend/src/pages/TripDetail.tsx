@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { tripsRepo } from "@/services/repos/tripsRepo";
-import { BagTemplate, ItemTemplate, PackingItem, TripDetail as TripDetailType, ItemStatus } from "@/types";
+import { TripDetail as TripDetailType, ItemStatus } from "@/types";
 import { BagTemplatesManager } from "@/components/BagTemplatesManager";
 import { PackingListManager } from "@/components/PackingListManager";
 
@@ -15,24 +14,23 @@ export default function TripDetailPage() {
   const [trip, setTrip] = useState<TripDetailType | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
-  const refreshTripDetails = async () => {
+  const refreshTripDetails = useCallback(async () => {
     if (!tripId) return;
     setIsLoading(true);
     try {
-      const tripResponse = await tripsRepo.getTrip(tripId);
-      setTrip(tripResponse.data);
+      const response = await tripsRepo.getTrip(tripId);
+      setTrip(response.data);
     } catch (error) {
       console.error("Failed to fetch trip details:", error);
       toast.error("Failed to load trip details.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tripId]);
 
   useEffect(() => {
-    if (!tripId) return;
     refreshTripDetails();
-  }, [tripId]);
+  }, [tripId, refreshTripDetails]);
 
   useEffect(() => {
     document.title = trip ? `${trip.name} — Trip Packer` : "Trip — Trip Packer";
@@ -64,6 +62,7 @@ export default function TripDetailPage() {
           </p>
         </div>
         <div className="flex gap-3">
+          <Button variant="secondary" onClick={() => navigate(`/trips/${tripId}/packing`)} disabled={isLoading}>Go to Packing</Button>
           <Button variant="secondary" onClick={() => navigate("/trips")} disabled={isLoading}>All trips</Button>
         </div>
       </header>

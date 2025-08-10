@@ -1,151 +1,195 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
+import * as React from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { tripsRepo } from "@/services/repos/tripsRepo";
-import { luggageRepo } from "@/services/repos/luggageRepo";
-import { packingRepo } from "@/services/repos/packingRepo";
 import { tripLuggageRepo } from "@/services/repos/tripLuggageRepo";
-import { itemsRepo } from "@/services/repos/itemsRepo";
-import type { Bag, Item, ItemStatus, Trip, ItemTemplate, LuggageType } from "@/types";
+import { packingRepo } from "@/services/repos/packingRepo";
+import { BagTemplate, ItemStatus, PackingItem } from "@/types";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 export default function TripsPackingPage() {
-  const [trips, setTrips] = useState<Trip[]>([]);
-  const [selectedTripId, setSelectedTripId] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState(false);
+  const { tripId } = useParams();
 
-  const fetchTrips = async () => {
-    setIsLoading(true);
+  const [bags, setBags] = useState<BagTemplate[]>([]);
+  const [isLoadingBags, setIsLoadingBags] = useState(false); // Renamed to avoid conflict
+  const [selectedBagId, setSelectedBagId] = useState<string | undefined>(undefined);
+
+  const [allPackingItems, setAllPackingItems] = useState<PackingItem[]>([]);
+  const [isLoadingAllPackingItems, setIsLoadingAllPackingItems] = useState(false); // New loading state
+
+
+  const fetchBags = useCallback(async () => {
+    if (!tripId) return;
+    setIsLoadingBags(true);
     try {
-      const response = await tripsRepo.listTrips();
-      setTrips(response.data);
+      const response = await tripLuggageRepo.listTripLuggage(tripId);
+      setBags(response.data);
+      if (response.data.length > 0 && !selectedBagId) {
+        setSelectedBagId(response.data[0].id.toString()); // Select the first bag by default
+      }
     } catch (error) {
-      console.error("Failed to fetch trips:", error);
-      toast.error("Failed to load trips.");
+      console.error("Failed to fetch bags:", error);
+      toast.error("Failed to load bags.");
     } finally {
-      setIsLoading(false);
+      setIsLoadingBags(false);
+    }
+  }, [tripId, selectedBagId]);
+
+  const fetchAllPackingItems = useCallback(async () => {
+    if (!tripId) return;
+    setIsLoadingAllPackingItems(true);
+    try {
+      const response = await packingRepo.getPackingList(tripId);
+      setAllPackingItems(response.data);
+    } catch (error) {
+      console.error("Failed to fetch all packing items:", error);
+      toast.error("Failed to load all packing items.");
+    } finally {
+      setIsLoadingAllPackingItems(false);
+    }
+  }, [tripId]);
+
+  useEffect(() => {
+    fetchBags();
+    fetchAllPackingItems(); // Fetch all packing items when tripId changes
+  }, [tripId, fetchBags, fetchAllPackingItems]);
+
+  const handleMoveItemInAllItems = async (itemId: number, newBagId: string) => {
+    setIsLoadingAllPackingItems(true);
+    try {
+      await packingRepo.updatePackingListItem(tripId, itemId, { bag_id: parseInt(newBagId) });
+      toast.success("Item moved successfully!");
+      fetchAllPackingItems(); // Refresh the list of all packing items
+      fetchBags(); // Refresh bags to update counts
+    } catch (error) {
+      console.error("Failed to move item:", error);
+      toast.error("Failed to move item.");
+    } finally {
+      setIsLoadingAllPackingItems(false);
     }
   };
 
-  useEffect(() => {
-    fetchTrips();
-  }, []);
+  function badgeVariant(status: ItemStatus): "secondary" | "default" | "destructive" {
+    switch (status) {
+      case ItemStatus.PACKED:
+        return "secondary";
+      case ItemStatus.UNPACKED:
+        return "default";
+      case ItemStatus.TO_BUY:
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  }
 
   return (
     <main className="container py-10">
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Trip Packing</h1>
-        <div className="flex gap-3">
-          <Select value={selectedTripId} onValueChange={setSelectedTripId} disabled={isLoading}>
-            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Select a trip" /></SelectTrigger>
-            <SelectContent>
-              {trips.map((trip) => (
-                <SelectItem key={trip.id} value={trip.id.toString()}>{trip.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </header>
 
-      {selectedTripId && (
-        <LuggageBoard tripId={selectedTripId} filter="ALL" onChange={() => {}} isLoading={isLoading} />
-      )}
+      <div className="flex gap-6">
+        {/* Left Column: ScrollArea for all items */}
+        <div className="w-1/4">
+          <h2 className="text-xl font-bold mb-4">All Trip Items</h2>
+          {isLoadingAllPackingItems ? (
+            <p>Loading all items...</p>
+          ) : allPackingItems.length === 0 ? (
+            <p>No items in this trip.</p>
+          ) : (
+            <ScrollArea className="h-[600px] w-full rounded-md border">
+              <div className="p-4">
+                {allPackingItems.map((item) => (
+                  item.item && (
+                    <React.Fragment key={item.id}>
+                      <Card className="mb-2">
+                        <CardHeader className="p-2">
+                          <CardTitle className="text-sm">{item.item.name} (x{item.quantity})</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-2 pt-0">
+                          <Badge variant={badgeVariant(item.status)}>{item.status.replace("_", " ")}</Badge>
+                          <Select value={item.bag_id?.toString() || ""} onValueChange={(v) => handleMoveItemInAllItems(item.id, v)}>
+                            <SelectTrigger className="w-[140px] mt-2"><SelectValue placeholder="Move to" /></SelectTrigger>
+                            <SelectContent>
+                              {bags.map((b) => (
+                                <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </CardContent>
+                      </Card>
+                      <Separator className="my-2" />
+                    </React.Fragment>
+                  )
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </div>
+
+        {/* Right Column: Tabs for bags */}
+        <div className="w-3/4">
+          {isLoadingBags ? (
+            <p>Loading bags...</p>
+          ) : bags.length === 0 ? (
+            <p>No bags found for this trip.</p>
+          ) : (
+            <Tabs value={selectedBagId} onValueChange={setSelectedBagId} className="w-full">
+              <TabsList>
+                {bags.map((bag) => (
+                  <TabsTrigger key={bag.id} value={bag.id.toString()}>{bag.name}</TabsTrigger>
+                ))}
+              </TabsList>
+              {bags.map((bag) => (
+                <TabsContent key={bag.id} value={bag.id.toString()}>
+                  <BagColumn
+                    bag={bag}
+                    filter="ALL"
+                    allBags={bags}
+                    onChange={fetchBags}
+                    isLoading={isLoadingBags}
+                    tripId={tripId!}
+                  />
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
 
-function LuggageBoard({ tripId, filter, onChange, isLoading: pageLoading }: { tripId: string; filter: ItemStatus | "ALL"; onChange: () => void; isLoading: boolean }) {
-  const [bags, setBags] = useState<Bag[]>([]);
-  const [newBag, setNewBag] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const refresh = async () => {
-    setIsLoading(true);
-    try {
-      const response = await tripsRepo.getTripLuggage(tripId);
-      setBags(response.data);
-      onChange(); // Notify parent to refresh overview
-    } catch (error) {
-      console.error("Failed to fetch bags:", error);
-      toast.error("Failed to load bag.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => { refresh(); }, [tripId]);
-
-  const addBag = async () => {
-    const name = newBag.trim();
-    if (!name) return;
-    setIsLoading(true);
-    try {
-      // Assuming a default LuggageType for now, or add a select for it
-      const newLuggageResponse = await luggageRepo.createLuggage({ name, type: LuggageType.CARRY_ON });
-      await tripLuggageRepo.addTripLuggage(tripId, newLuggageResponse.data.id);
-      setBags((prev) => [...prev, { ...newLuggageResponse.data, trip_id: parseInt(tripId) }]);
-      setNewBag("");
-      toast.success("Bag added successfully!");
-      onChange(); // Notify parent to refresh overview
-    } catch (error) {
-      console.error("Failed to add bag:", error);
-      toast.error("Failed to add bag.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <section className="grid gap-6 md:grid-cols-3">
-      <Card>
-        <CardHeader>
-          <CardTitle>Add bag</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2 text-left">
-            <Label htmlFor="bag">Bag name</Label>
-            <Input id="bag" placeholder="Carry-on" value={newBag} onChange={(e) => setNewBag(e.target.value)} disabled={isLoading || pageLoading} />
-          </div>
-          <Button onClick={addBag} className="w-full" disabled={isLoading || pageLoading || !newBag.trim()}>
-            {isLoading ? "Adding..." : "Add bag"}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {bags.map((b) => (
-        <BagColumn key={b.id} bag={b} filter={filter} allBags={bags} onChange={onChange} isLoading={pageLoading || isLoading} />
-      ))}
-    </section>
-  );
-}
-
-function BagColumn({ bag, filter, allBags, onChange, isLoading: boardLoading }: { bag: Bag; filter: ItemStatus | "ALL"; allBags: Bag[]; onChange: () => void; isLoading: boolean }) {
+function BagColumn({ bag, filter, allBags, onChange, isLoading: boardLoading, tripId }: { bag: BagTemplate; filter: ItemStatus | "ALL"; allBags: BagTemplate[]; onChange: () => void; isLoading: boolean; tripId: string }) {
   const [items, setItems] = useState<Item[]>([]);
-  const [itemTemplates, setItemTemplates] = useState<ItemTemplate[]>([]);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | "">(""); // Changed to string for Select value
-  const [name, setName] = useState("");
-  const [qty, setQty] = useState<number>(1);
-  const [isPacked, setIsPacked] = useState<boolean>(false);
-
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
-  const [editedName, setEditedName] = useState("");
-  const [editedQty, setEditedQty] = useState<number>(1);
+  const [editedName, setEditedName] = useState<string>("");
+  const [editedQty, setEditedQty] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await packingRepo.listLuggageItems(bag.id);
-      // Ensure is_packed is correctly mapped from backend response
-      setItems(response.data.map(item => ({ ...item, status: item.is_packed ? ItemStatus.PACKED : ItemStatus.UNPACKED })));
-      const templatesResponse = await itemsRepo.listItems();
-      setItemTemplates(templatesResponse.data);
+      const response = await packingRepo.getPackingList(tripId);
+      // Filter items by the current bag's ID and map status
+      const filteredItems = response.data
+        .filter(packingItem => packingItem.bag?.id === bag.id && packingItem.item)
+        .map(packingItem => ({
+          ...packingItem.item!, // Use the detailed item information
+          id: packingItem.id, // Use the packing item ID for key
+          quantity: packingItem.quantity,
+          is_packed: packingItem.status === ItemStatus.PACKED,
+          status: packingItem.status,
+          luggage_id: packingItem.bag_id,
+        }));
+      setItems(filteredItems);
     } catch (error) {
       console.error(`Failed to fetch items for bag ${bag.name}:`, error);
       toast.error(`Failed to load items for ${bag.name}.`);
@@ -153,45 +197,9 @@ function BagColumn({ bag, filter, allBags, onChange, isLoading: boardLoading }: 
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [tripId, bag.id, bag.name]);
 
-  useEffect(() => { refresh(); }, [bag.id]);
-
-  const addItem = async () => {
-    setIsLoading(true);
-    try {
-      let finalItemId: number;
-      let finalItemName: string;
-
-      if (selectedTemplateId) {
-        finalItemId = parseInt(selectedTemplateId);
-        finalItemName = itemTemplates.find(t => t.id === finalItemId)?.name || "";
-      } else {
-        const n = name.trim();
-        if (!n) {
-          toast.error("Item name cannot be empty.");
-          return;
-        }
-        const newItemTemplate = await itemsRepo.createItem({ name: n, category: "OTHER" }); // Default category
-        finalItemId = newItemTemplate.data.id;
-        finalItemName = newItemTemplate.data.name;
-      }
-
-      const response = await packingRepo.addLuggageItem(bag.id, { item_id: finalItemId, quantity: qty || 1, is_packed: isPacked });
-      setItems((prev) => [...prev, { ...response.data, status: response.data.is_packed ? ItemStatus.PACKED : ItemStatus.UNPACKED }]);
-      setName("");
-      setQty(1);
-      setIsPacked(false);
-      setSelectedTemplateId("");
-      toast.success("Item added to bag!");
-      onChange(); // Notify parent to refresh overview
-    } catch (error) {
-      console.error("Failed to add item:", error);
-      toast.error("Failed to add item to bag.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => { refresh(); }, [bag.id, refresh]);
 
   const startEditing = (item: Item) => {
     setEditingItemId(item.id);
@@ -307,44 +315,6 @@ function BagColumn({ bag, filter, allBags, onChange, isLoading: boardLoading }: 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-12 gap-2 text-left">
-          <div className="col-span-12">
-            <Label htmlFor={`item-${bag.id}`}>Add item</Label>
-          </div>
-          <div className="col-span-12">
-            <Select value={selectedTemplateId} onValueChange={(v) => setSelectedTemplateId(v)} disabled={isLoading || boardLoading}>
-              <SelectTrigger><SelectValue placeholder="Select from templates" /></SelectTrigger>
-              <SelectContent>
-                {itemTemplates.map((template) => (
-                  <SelectItem key={template.id} value={template.id.toString()}>{template.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-6">
-            <Input id={`item-${bag.id}`} placeholder="T-shirt" value={name} onChange={(e) => setName(e.target.value)} disabled={!!selectedTemplateId || isLoading || boardLoading} />
-          </div>
-          <div className="col-span-3">
-            <Input type="number" min={1} value={qty} onChange={(e) => setQty(Number(e.target.value))} disabled={isLoading || boardLoading} />
-          </div>
-          <div className="col-span-3">
-            <Select value={isPacked ? "PACKED" : "UNPACKED"} onValueChange={(v) => setIsPacked(v === "PACKED")} disabled={isLoading || boardLoading}>
-              <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="UNPACKED">UNPACKED</SelectItem>
-                <SelectItem value="PACKED">PACKED</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-12">
-            <Button className="w-full" onClick={addItem} disabled={isLoading || boardLoading || (!selectedTemplateId && !name.trim())}>
-              {isLoading ? "Adding..." : "Add"}
-            </Button>
-          </div>
-        </div>
-
-        <Separator className="my-2" />
-
         <ul className="space-y-2">
           {visibleItems.map((it) => (
             <li key={it.id} className="flex items-center justify-between border rounded-md p-2">
@@ -404,16 +374,5 @@ function BagColumn({ bag, filter, allBags, onChange, isLoading: boardLoading }: 
   );
 }
 
-function badgeVariant(status: ItemStatus): "secondary" | "default" | "destructive" {
-  switch (status) {
-    case ItemStatus.PACKED:
-      return "secondary";
-    case ItemStatus.UNPACKED:
-      return "default";
-    case ItemStatus.TO_BUY:
-      return "destructive";
-    default:
-      return "secondary";
-  }
-}
+
 

@@ -103,6 +103,16 @@ export interface PackingItem {
   bag?: BagTemplate;
 }
 
+export interface Item {
+  id: ID;
+  name: string;
+  quantity: number;
+  is_packed: boolean;
+  status: ItemStatus;
+  luggage_id?: ID;
+  category: ItemCategory;
+}
+
 export interface PackingCreate {
   item_id: ID;
   bag_id?: ID;
