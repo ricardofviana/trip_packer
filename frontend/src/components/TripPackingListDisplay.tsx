@@ -1,14 +1,14 @@
-import { PackingItem, ItemTemplate, ItemStatus } from "@/types";
+import { TripItem, ItemTemplate, ItemStatus, ID } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MinusIcon, PlusIcon } from "lucide-react";
 
 interface TripPackingListDisplayProps {
-  packingList: PackingItem[];
+  packingList: TripItem[];
   allItems: ItemTemplate[];
-  onQuantityChange: (packingItemId: number, newQuantity: number) => void;
-  onRemoveItem: (packingItemId: number) => void;
-  onAddItem: (itemId: number) => void;
+  onQuantityChange: (itemId: ID, newQuantity: number) => void;
+  onRemoveItem: (itemId: ID) => void;
+  onAddItem: (itemId: ID) => void;
 }
 
 export function TripPackingListDisplay({ packingList, allItems, onQuantityChange, onRemoveItem, onAddItem }: TripPackingListDisplayProps) {
@@ -25,19 +25,18 @@ export function TripPackingListDisplay({ packingList, allItems, onQuantityChange
             <p className="text-muted-foreground">No items in the packing list yet.</p>
           ) : (
             packingList.map((item) => (
-              <div key={item.id} className="flex items-center justify-between rounded-md border p-3">
+              <div key={item.item_id} className="flex items-center justify-between rounded-md border p-3">
                 <div className="flex-grow">
                   <p className="font-semibold">{item.item.name}</p>
                   <p className="text-sm text-muted-foreground">
                     Category: {item.item.category.replace(/_/g, ' ')}
-                    {item.bag && ` · Bag: ${item.bag.name}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => onQuantityChange(item.id, item.quantity - 1)}
+                    onClick={() => onQuantityChange(item.item_id, item.quantity - 1)}
                     disabled={item.quantity <= 1}
                   >
                     <MinusIcon className="h-4 w-4" />
@@ -45,21 +44,21 @@ export function TripPackingListDisplay({ packingList, allItems, onQuantityChange
                   <Input
                     type="number"
                     value={item.quantity}
-                    onChange={(e) => onQuantityChange(item.id, parseInt(e.target.value))}
+                    onChange={(e) => onQuantityChange(item.item_id, parseInt(e.target.value))}
                     className="w-16 text-center"
                     min="1"
                   />
                   <Button
                     variant="outline"
                     size="icon"
-                    onClick={() => onQuantityChange(item.id, item.quantity + 1)}
+                    onClick={() => onQuantityChange(item.item_id, item.quantity + 1)}
                   >
                     <PlusIcon className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => onRemoveItem(item.id)}
+                    onClick={() => onRemoveItem(item.item_id)}
                     className="ml-4"
                   >
                     Remove

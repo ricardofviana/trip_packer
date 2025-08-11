@@ -1,5 +1,41 @@
 from http import HTTPStatus
 
+import pytest
+
+
+async def _create_item(client, name: str, category: str):
+    item_data = {"name": name, "category": category}
+    response = client.post("/api/items/", json=item_data)
+    return response.json()["id"]
+
+
+async def _create_bag(client, name: str, bag_type: str):
+    bag_data = {"name": name, "type": bag_type}
+    response = client.post("/api/bags/", json=bag_data)
+    return response.json()["id"]
+
+
+async def _get_or_create_default_bag(client):
+    # Try to get a bag named "Default Bag"
+    response = client.get("/api/bags/")
+    bags = response.json()
+    for bag in bags:
+        if bag["name"] == "Default Bag":
+            return bag["id"]
+
+    # If not found, create it
+    return await _create_bag(client, "Default Bag", "BACKPACK")
+
+
+async def _create_packing(client, trip_id: int, packing_data: dict):
+    response = client.post(f"/api/trips/{trip_id}/packing-list/", json=packing_data)
+    return response.json()
+
+
+async def _create_trip_item(client, trip_id: int, trip_item_data: dict):
+    response = client.post(f"/api/trips/{trip_id}/trip-items/", json=trip_item_data)
+    return response.json()
+
 
 def test_create_trip(client):
     """Test creating a new trip."""
@@ -50,13 +86,19 @@ def test_get_trips(client):
     assert all("end_date" in trip for trip in data)
 
 
-def test_get_single_trip(client):
+@pytest.mark.asyncio
+async def test_get_single_trip(client):
     """Test getting a single trip by ID."""
     # Create a trip
     trip_data = {"name": "Solo Adventure", "start_date": "2024-09-15", "end_date": "2024-09-22"}
     create_response = client.post("/api/trips/", json=trip_data)
     created_trip = create_response.json()
     trip_id = created_trip["id"]
+
+    # Create an item and a bag, then a packing entry
+    item_id = await _create_item(client, "Camera", "ELECTRONICS")
+
+    await _create_trip_item(client, trip_id, {"item_id": item_id, "quantity": 1, "status": "PACKED"})
 
     # Get the trip
     response = client.get(f"/api/trips/{trip_id}")
@@ -70,7 +112,15 @@ def test_get_single_trip(client):
     assert "created_at" in data
     assert "updated_at" in data
     assert "bags" in data
-    assert "packing_list" in data
+    assert "trip_items" in data
+
+    # Assert trip items details
+    assert len(data["trip_items"]) == 1
+    trip_item_entry = data["trip_items"][0]
+    assert trip_item_entry["item_id"] == item_id
+    assert trip_item_entry["quantity"] == 1
+    assert trip_item_entry["status"] == "PACKED"
+    assert "item" in trip_item_entry
 
 
 def test_get_nonexistent_trip(client):

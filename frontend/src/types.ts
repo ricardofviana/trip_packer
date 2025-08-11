@@ -89,44 +89,29 @@ export interface ItemUpdate {
   category?: ItemCategory;
 }
 
-export interface PackingItem {
-  id: ID;
+export interface TripItem {
   trip_id: ID;
   item_id: ID;
-  bag_id?: ID;
   quantity: number;
   status: ItemStatus;
   created_at: string;
   updated_at: string;
   // Nested objects for detailed response
   item: ItemTemplate;
-  bag?: BagTemplate;
 }
 
-export interface Item {
-  id: ID;
-  name: string;
-  quantity: number;
-  is_packed: boolean;
-  status: ItemStatus;
-  luggage_id?: ID;
-  category: ItemCategory;
-}
-
-export interface PackingCreate {
+export interface TripItemCreate {
   item_id: ID;
-  bag_id?: ID;
   quantity?: number;
   status?: ItemStatus;
 }
 
-export interface PackingUpdate {
-  bag_id?: ID;
+export interface TripItemUpdate {
   quantity?: number;
   status?: ItemStatus;
 }
 
 export interface TripDetail extends Trip {
   bags: BagTemplate[]; // Bags associated with this trip
-  packing_list: PackingItem[]; // Packing items for this trip
+  trip_items: TripItem[]; // Trip items for this trip
 }

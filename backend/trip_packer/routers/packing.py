@@ -1,3 +1,4 @@
+from http import HTTPStatus
 from typing import Annotated, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -33,11 +34,10 @@ async def create_packing(trip_id: int, packing: PackingCreate, session: T_Sessio
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Item with id {packing.item_id} not found")
 
-    # Check if bag exists (if provided)
-    if packing.bag_id is not None:
-        bag = await session.get(Bag, packing.bag_id)
-        if not bag:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Bag with id {packing.bag_id} not found")
+    # Check if bag exists
+    bag = await session.get(Bag, packing.bag_id)
+    if not bag:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Bag with id {packing.bag_id} not found")
 
     # Create the packing entry
     new_packing = Packing(
@@ -80,17 +80,20 @@ async def get_trip_packing(trip_id: int, session: T_Session):
     return packings
 
 
-@router.put("/{item_id}", response_model=PackingResponse)
-async def update_packing(trip_id: int, item_id: int, packing_update: PackingUpdate, session: T_Session):
+@router.put("/{item_id}/{bag_id}", response_model=PackingResponse)
+async def update_packing(trip_id: int, item_id: int, packing_update: PackingUpdate, session: T_Session, bag_id: int):
     """Update an existing packing entry."""
     # Get the existing packing entry
-    result = await session.execute(select(Packing).where(Packing.trip_id == trip_id, Packing.item_id == item_id))
+    query = select(Packing).where(Packing.trip_id == trip_id, Packing.item_id == item_id, Packing.bag_id == bag_id)
+
+    result = await session.execute(query)
     packing = result.scalar_one_or_none()
 
     if not packing:
+        detail_message = f"Packing entry for item {item_id} in trip {trip_id} in bag {bag_id} not found"
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Packing entry for item {item_id} in trip {trip_id} not found",
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=detail_message,
         )
 
     # Update only the fields that were provided
@@ -105,20 +108,32 @@ async def update_packing(trip_id: int, item_id: int, packing_update: PackingUpda
     return packing
 
 
-@router.delete("/{item_id}", response_model=Message)
-async def delete_packing(trip_id: int, item_id: int, session: T_Session):
-    """Delete a packing entry."""
-    # Get the existing packing entry
-    result = await session.execute(select(Packing).where(Packing.trip_id == trip_id, Packing.item_id == item_id))
-    packing = result.scalar_one_or_none()
+@router.delete("/{item_id}/{bag_id}", response_model=Message)
+async def delete_packing(trip_id: int, item_id: int, session: T_Session, bag_id: int):
+    """Delete one or more packing entries."""
+    # Check if trip exists
+    trip = await session.get(Trip, trip_id)
+    if not trip:
+        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail=f"Trip with id {trip_id} not found")
 
-    if not packing:
+    query = select(Packing).where(Packing.trip_id == trip_id, Packing.item_id == item_id, Packing.bag_id == bag_id)
+
+    not_found_detail = f"Packing entry for item {item_id} in trip {trip_id} and bag {bag_id} not found"
+    success_message = (
+        f"Packing entry for item {item_id} in trip {trip_id} and bag {bag_id} has been deleted successfully"
+    )
+
+    result = await session.execute(query)
+    packings_to_delete = result.scalars().all()
+
+    if not packings_to_delete:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Packing entry for item {item_id} in trip {trip_id} not found",
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=not_found_detail,
         )
+    for packing in packings_to_delete:
+        await session.delete(packing)
 
-    await session.delete(packing)
     await session.commit()
 
-    return Message(message=f"Packing entry for item {item_id} in trip {trip_id} has been deleted successfully")
+    return Message(message=success_message)

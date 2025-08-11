@@ -117,7 +117,7 @@ class PackingCreate(BaseModel):
     """Schema for creating a packing entry"""
 
     item_id: int
-    bag_id: Optional[int] = None
+    bag_id: int
     quantity: Optional[int] = 1
     status: Optional[ItemStatus] = ItemStatus.UNPACKED
 
@@ -133,10 +133,38 @@ class PackingUpdate(BaseModel):
 class PackingResponse(BaseModel):
     """Schema for packing responses"""
 
-    id: int
     trip_id: int
     item_id: int
-    bag_id: Optional[int]
+    bag_id: int
+    quantity: int
+    status: ItemStatus
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# TripItem schemas
+class TripItemCreate(BaseModel):
+    """Schema for creating a trip item entry"""
+
+    item_id: int
+    quantity: Optional[int] = 1
+    status: Optional[ItemStatus] = ItemStatus.UNPACKED
+
+
+class TripItemUpdate(BaseModel):
+    """Schema for updating a trip item entry"""
+
+    quantity: Optional[int] = None
+    status: Optional[ItemStatus] = None
+
+
+class TripItemResponse(BaseModel):
+    """Schema for trip item responses"""
+
+    trip_id: int
+    item_id: int
     quantity: int
     status: ItemStatus
     created_at: datetime
@@ -149,10 +177,9 @@ class PackingResponse(BaseModel):
 class PackingDetailResponse(BaseModel):
     """Schema for detailed packing responses including related objects"""
 
-    id: int
     trip_id: int
     item_id: int
-    bag_id: Optional[int]
+    bag_id: int
     quantity: int
     status: ItemStatus
     created_at: datetime
@@ -160,15 +187,31 @@ class PackingDetailResponse(BaseModel):
 
     # Related objects
     item: ItemResponse
-    bag: Optional[BagResponse] = None
+    bag: BagResponse
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TripItemDetailResponse(BaseModel):
+    """Schema for detailed trip item responses including related objects"""
+
+    trip_id: int
+    item_id: int
+    quantity: int
+    status: ItemStatus
+    created_at: datetime
+    updated_at: datetime
+
+    # Related objects
+    item: ItemResponse
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class TripDetailResponse(TripResponse):
-    """Schema for detailed trip responses including bags and packing lists"""
+    """Schema for detailed trip responses including bags and trip items"""
 
     bags: list[BagResponse]
-    packing_list: list[PackingDetailResponse]
+    trip_items: list[TripItemDetailResponse]
 
     model_config = ConfigDict(from_attributes=True)

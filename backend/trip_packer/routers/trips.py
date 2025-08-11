@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from trip_packer.database import get_session
-from trip_packer.models import Bag, Packing, Trip, TripBag
+from trip_packer.models import Bag, Trip, TripBag, TripItem
 from trip_packer.schemas import (
     BagResponse,
     Message,
@@ -57,7 +57,7 @@ async def get_trip(trip_id: int, session: T_Session):
         .where(Trip.id == trip_id)
         .options(
             selectinload(Trip.trip_bags).selectinload(TripBag.bag),
-            selectinload(Trip.packings).selectinload(Packing.item),
+            selectinload(Trip.trip_items).selectinload(TripItem.item),
         )
     )
     trip = result.scalar_one_or_none()
