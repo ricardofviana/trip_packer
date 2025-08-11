@@ -80,20 +80,7 @@ export default function TripsPacking() {
     fetchAllPackingItems(); // Fetch all packing items when tripId changes
   }, [tripId, fetchBags, fetchAllPackingItems]);
 
-  // const handleMoveItemInAllItems = async (itemId: number, newBagId: string) => {
-  //   setIsLoadingAllPackingItems(true);
-  //   try {
-  //     await packingRepo.updatePackingListItem(tripId, itemId, { bag_id: parseInt(newBagId) });
-  //     toast.success("Item moved successfully!");
-  //     fetchAllPackingItems(); // Refresh the list of all packing items
-  //     fetchBags(); // Refresh bags to update counts
-  //   } catch (error) {
-  //     console.error("Failed to move item:", error);
-  //     toast.error("Failed to move item.");
-  //   } finally {
-  //     setIsLoadingAllPackingItems(false);
-  //   }
-  // };
+
 
   return (
     <main className="container py-10">
@@ -262,20 +249,6 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
     }
   };
 
-  // const handleMoveItem = async (itemId: number, newLuggageId: string) => {
-  //   setIsLoading(true);
-  //   try {
-  //     await packingRepo.updateLuggageItem(bag.id, itemId, { luggage_id: parseInt(newLuggageId) });
-  //     setItems((prev) => prev.filter((item) => item.id !== itemId)); // Remove from current bag
-  //     toast.success("Item moved successfully!");
-  //     onChange(); // Trigger full refresh to update all bags
-  //   } catch (error) {
-  //     console.error("Failed to move item:", error);
-  //     toast.error("Failed to move item.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const handleDeleteItem = async (itemId: number) => {
     setIsLoading(true);
@@ -292,19 +265,6 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
     }
   };
 
-  // const handleDeleteBag = async () => {
-  //   setIsLoading(true);
-  //   try {
-  //     await tripLuggageRepo.removeTripLuggage(bag.trip_id, bag.id);
-  //     toast.success("Bag deleted!");
-  //     onChange(); // Trigger full refresh to remove bag from UI
-  //   } catch (error) {
-  //     console.error("Failed to delete bag:", error);
-  //     toast.error("Failed to delete bag.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const visibleItems = items.filter((it) => {
     if (filter === "ALL") return true;
@@ -313,22 +273,13 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
 
   return (
     <Card className="flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>{bag.name}</span>
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary">{items.length} items</Badge>
-            {/* <Button variant="ghost" onClick={handleDeleteBag} disabled={isLoading || boardLoading}>Delete</Button> */}
-          </div>
-        </CardTitle>
-      </CardHeader>
       <CardContent className="space-y-4">
         <ul className="space-y-2">
           {visibleItems.map((it) => (
-            <li key={it.id} className="flex items-center justify-between border rounded-md p-2">
+            <li key={it.item.id} className="flex items-center justify-between border rounded-md p-2">
               <div className="flex items-center gap-3">
                 <Badge variant={badgeVariant(it.status)}>{it.status.replace("_", " ")}</Badge>
-                <span className="font-medium">{it.name}</span>
+                <span className="font-medium">{it.item.name}</span>
                 {editingItemId === it.id ? (
                   <Input type="number" min={1} value={editedQuantity} onChange={(e) => setEditedQuantity(Number(e.target.value))} className="w-16" disabled={isLoading || boardLoading} />
                 ) : (
@@ -358,14 +309,6 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
                     <SelectItem value={ItemStatus.TO_BUY}>TO BUY</SelectItem>
                   </SelectContent>
                 </Select>
-                {/* <Select value={it.luggage_id?.toString() || ""} onValueChange={(v) => handleMoveItem(it.id, v)} disabled={isLoading || boardLoading}>
-                  <SelectTrigger className="w-[140px]"><SelectValue placeholder="Move to" /></SelectTrigger>
-                  <SelectContent>
-                    {allBags.map((b) => (
-                      <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select> */}
                 <Button variant="ghost" onClick={() => handleDeleteItem(it.id)} disabled={isLoading || boardLoading}>Delete</Button>
               </div>
             </li>
