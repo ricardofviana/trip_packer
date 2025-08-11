@@ -13,9 +13,11 @@ import { tripLuggageRepo } from "@/services/repos/tripLuggageRepo";
 import { BagTemplate, ItemStatus, TripItem } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { ManageItemBagsDialog } from "@/components/ManageItemBagsDialog"; // New import
+import * as api from "@/services/api"; // Import api
 
 
-  function badgeVariant(status: ItemStatus): "default" | "secondary" | "destructive" | "outline" {
+function badgeVariant(status: ItemStatus): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
     case ItemStatus.PACKED:
       return "default";
@@ -30,6 +32,9 @@ import { Input } from "@/components/ui/input";
 
 export default function TripsPacking() {
   const { tripId } = useParams();
+
+  const [isManageBagsDialogOpen, setIsManageBagsDialogOpen] = useState(false); // New state
+  const [itemToManageBagsFor, setItemToManageBagsFor] = useState<TripItem | null>(null); // New state
 
   const [bags, setBags] = useState<BagTemplate[]>([]);
   const [isLoadingBags, setIsLoadingBags] = useState(false); // Renamed to avoid conflict
@@ -116,14 +121,17 @@ export default function TripsPacking() {
                         </CardHeader>
                         <CardContent className="p-2 pt-0">
                           <Badge variant={badgeVariant(item.status)}>{item.status.replace("_", " ")}</Badge>
-                          {/* <Select value={item.bag_id?.toString() || ""} onValueChange={(v) => handleMoveItemInAllItems(item.id, v)}>
-                            <SelectTrigger className="w-[140px] mt-2"><SelectValue placeholder="Move to" /></SelectTrigger>
-                            <SelectContent>
-                              {bags.map((b) => (
-                                <SelectItem key={b.id} value={b.id.toString()}>{b.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select> */}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-2"
+                            onClick={() => {
+                              setItemToManageBagsFor(item);
+                              setIsManageBagsDialogOpen(true);
+                            }}
+                          >
+                            Manage Bags
+                          </Button>
                         </CardContent>
                       </Card>
                       <Separator className="my-2" />
@@ -153,7 +161,6 @@ export default function TripsPacking() {
                   <BagColumn
                     bag={bag}
                     filter="ALL"
-                    allBags={bags}
                     onChange={fetchBags}
                     isLoading={isLoadingBags}
                     tripId={tripId!}
@@ -164,6 +171,18 @@ export default function TripsPacking() {
           )}
         </div>
       </div>
+      {itemToManageBagsFor && (
+        <ManageItemBagsDialog
+          isOpen={isManageBagsDialogOpen}
+          onClose={() => setIsManageBagsDialogOpen(false)}
+          tripItem={itemToManageBagsFor}
+          tripId={tripId!}
+          onSave={() => {
+            fetchAllPackingItems(); // Refresh all items
+            fetchBags(); // Refresh bags (to update counts if needed)
+          }}
+        />
+      )}
     </main>
   );
 }
@@ -177,15 +196,20 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await tripItemsRepo.getTripItems(parseInt(tripId));
+      const response = await api.getPackingList(parseInt(tripId)); // Use packing list endpoint
       // Filter items by the current bag's ID and map status
       const filteredItems = response.data
-        .filter(tripItem => tripItem.item) // Ensure item is not null
-        .map(tripItem => ({
-          ...tripItem.item!,
-          id: tripItem.item_id, // Use the trip item's item_id as the ID for display
-          quantity: tripItem.quantity,
-          status: tripItem.status,
+        .filter(packingItem => packingItem.item && packingItem.bag.id === bag.id) // Filter by bag.id from packingItem
+        .map(packingItem => ({
+          // Map PackingItem to TripItem structure
+          trip_id: packingItem.trip_id,
+          item_id: packingItem.item_id,
+          quantity: packingItem.quantity,
+          status: packingItem.status,
+          bag_ids: [packingItem.bag.id], // Assuming for display, an item in this bag has this bag_id
+          created_at: packingItem.created_at,
+          updated_at: packingItem.updated_at,
+          item: packingItem.item,
         }));
       setItems(filteredItems);
     } catch (error) {
@@ -195,7 +219,7 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
     } finally {
       setIsLoading(false);
     }
-  }, [tripId, bag.name]);
+  }, [tripId, bag.name, bag.id]);
 
   useEffect(() => { refresh(); }, [bag.id, refresh]);
 

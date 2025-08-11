@@ -89,7 +89,7 @@ export interface ItemUpdate {
   category?: ItemCategory;
 }
 
-export interface TripItem {
+export interface PackingItem {
   trip_id: ID;
   item_id: ID;
   quantity: number;
@@ -98,6 +98,7 @@ export interface TripItem {
   updated_at: string;
   // Nested objects for detailed response
   item: ItemTemplate;
+  bag: BagTemplate; // Added for bag association
 }
 
 export interface TripItemCreate {
@@ -109,6 +110,7 @@ export interface TripItemCreate {
 export interface TripItemUpdate {
   quantity?: number;
   status?: ItemStatus;
+  bag_ids?: ID[]; // Added for updating bag associations
 }
 
 export interface TripDetail extends Trip {
