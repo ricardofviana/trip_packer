@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ItemTemplate, PackingItem, ID, ItemStatus } from "@/types";
 import { itemsRepo } from "@/services/repos/itemsRepo";
 import { packingRepo } from "@/services/repos/packingRepo";
+import { bagsRepo } from "@/services/repos/bagsRepo";
 
 interface PackingListManagerProps {
   tripId: ID;
@@ -17,6 +18,7 @@ interface PackingListManagerProps {
 export function PackingListManager({ tripId, packingList, refreshTripDetails }: PackingListManagerProps) {
   const [allItemsTemplates, setAllItemsTemplates] = useState<ItemTemplate[]>([]);
   const [selectedItemTemplateId, setSelectedItemTemplateId] = useState<ID | "">("");
+  const [defaultBagId, setDefaultBagId] = useState<ID | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchAllItemsTemplates = async () => {
@@ -32,15 +34,33 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
+  const fetchDefaultBag = async () => {
+    try {
+      const response = await bagsRepo.listBags();
+      const defaultBag = response.data.find(bag => bag.name === "Default Bag");
+      if (defaultBag) {
+        setDefaultBagId(defaultBag.id);
+      } else {
+        // If no default bag exists, create one
+        const newBagResponse = await bagsRepo.createBag({ name: "Default Bag", type: "BACKPACK" });
+        setDefaultBagId(newBagResponse.data.id);
+      }
+    } catch (error) {
+      console.error("Failed to fetch or create default bag:", error);
+      toast.error("Failed to set up default bag.");
+    }
+  };
+
   useEffect(() => {
     fetchAllItemsTemplates();
+    fetchDefaultBag();
   }, []);
 
   const handleAddItemToPackingList = async () => {
-    if (selectedItemTemplateId === "") return;
+    if (selectedItemTemplateId === "" || defaultBagId === null) return;
     setIsLoading(true);
     try {
-      await packingRepo.addItemToPackingList(tripId, { item_id: selectedItemTemplateId as ID });
+      await packingRepo.addItemToPackingList(tripId, { item_id: selectedItemTemplateId as ID, bag_id: defaultBagId });
       toast.success("Item added to packing list successfully!");
       setSelectedItemTemplateId("");
       refreshTripDetails();
@@ -52,11 +72,11 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  const handleRemovePackingItem = async (itemId: ID) => {
+  const handleRemovePackingItem = async (item: PackingItem) => {
     if (!confirm("Remove this item from the packing list?")) return;
     setIsLoading(true);
     try {
-      await packingRepo.removeItemFromPackingList(tripId, itemId);
+      await packingRepo.removeItemFromPackingList(tripId, item.item_id, item.bag_id);
       toast.success("Item removed from packing list successfully!");
       refreshTripDetails();
     } catch (error) {
@@ -70,7 +90,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
   const handleUpdatePackingItemStatus = async (item: PackingItem, newStatus: ItemStatus) => {
     setIsLoading(true);
     try {
-      await packingRepo.updatePackingListItem(tripId, item.item.id, { status: newStatus });
+      await packingRepo.updatePackingListItem(tripId, item.item_id, item.bag_id, { status: newStatus });
       toast.success("Packing item status updated!");
       refreshTripDetails();
     } catch (error) {
@@ -84,7 +104,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
   const handleUpdatePackingItemQuantity = async (item: PackingItem, newQuantity: number) => {
     setIsLoading(true);
     try {
-      await packingRepo.updatePackingListItem(tripId, item.item.id, { quantity: newQuantity });
+      await packingRepo.updatePackingListItem(tripId, item.item_id, item.bag_id, { quantity: newQuantity });
       toast.success("Packing item quantity updated!");
       refreshTripDetails();
     } catch (error) {
@@ -106,7 +126,6 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     return acc;
   }, {} as Record<string, PackingItem[]>);
 
-  
 
 
   return (
@@ -134,7 +153,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
           </Select>
           <Button
             onClick={handleAddItemToPackingList}
-            disabled={isLoading || selectedItemTemplateId === ""}
+            disabled={isLoading || selectedItemTemplateId === "" || defaultBagId === null}
             className="w-full"
           >
             {isLoading ? "Adding..." : "Add Item"}
@@ -149,7 +168,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
           </CardHeader>
           <CardContent>
             {itemsInBag.map((item) => (
-              <div key={item.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
+              <div key={`${item.item_id}-${item.bag_id}`} className="flex items-center justify-between py-2 border-b last:border-b-0">
                 <div className="flex items-center gap-2">
                   <span>{item.item.name}</span>
                   <Input
@@ -170,7 +189,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
                   </Select>
                   <Button
                     variant="ghost"
-                    onClick={() => handleRemovePackingItem(item.item.id)}
+                    onClick={() => handleRemovePackingItem(item)}
                     disabled={isLoading}
                   >
                     Remove

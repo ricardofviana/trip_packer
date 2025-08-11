@@ -3,9 +3,10 @@ import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { tripsRepo } from "@/services/repos/tripsRepo";
-import { packingRepo } from "@/services/repos/packingRepo";
+import { tripItemsRepo } from "@/services/repos/tripItemsRepo";
 import { itemsRepo } from "@/services/repos/itemsRepo";
-import { TripDetail as TripDetailType, ItemStatus } from "@/types";
+import { bagsRepo } from "@/services/repos/bagsRepo";
+import { TripDetail as TripDetailType, ItemStatus, BagTemplate } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TripBagsDisplay } from "@/components/TripBagsDisplay";
 import { TripPackingListDisplay } from "@/components/TripPackingListDisplay";
@@ -16,6 +17,7 @@ export default function TripDetailPage() {
 
   const [trip, setTrip] = useState<TripDetailType | undefined>();
   const [allItems, setAllItems] = useState<ItemTemplate[]>([]);
+  const [allBags, setAllBags] = useState<BagTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const refreshTripDetails = useCallback(async () => {
@@ -27,30 +29,33 @@ export default function TripDetailPage() {
 
       const itemsResponse = await itemsRepo.listItems();
       setAllItems(itemsResponse.data);
+
+      const bagsResponse = await bagsRepo.listBags();
+      setAllBags(bagsResponse.data);
     } catch (error) {
-      console.error("Failed to fetch trip details or items:", error);
-      toast.error("Failed to load trip details or items.");
+      console.error("Failed to fetch trip details, items, or bags:", error);
+      toast.error("Failed to load trip details, items, or bags.");
     } finally {
       setIsLoading(false);
     }
   }, [tripId]);
 
   const handleQuantityChange = useCallback(async (packingItemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return; // Prevent quantity from going below 1
+    if (!tripId || newQuantity < 1) return; // Prevent quantity from going below 1
     try {
-      await packingRepo.updatePackingItem(packingItemId, { quantity: newQuantity });
+      await tripItemsRepo.updateTripItem(parseInt(tripId), packingItemId, { quantity: newQuantity });
       toast.success("Item quantity updated.");
       refreshTripDetails(); // Refresh to get updated data
     } catch (error) {
       console.error("Failed to update item quantity:", error);
       toast.error("Failed to update item quantity.");
     }
-  }, [refreshTripDetails]);
+  }, [tripId, refreshTripDetails]);
 
   const handleRemoveItem = useCallback(async (packingItemId: number) => {
     if (!tripId) return;
     try {
-      await packingRepo.removeItemFromPackingList(parseInt(tripId), packingItemId);
+      await tripItemsRepo.removeTripItem(parseInt(tripId), packingItemId);
       toast.success("Item removed from packing list.");
       refreshTripDetails(); // Refresh to get updated data
     } catch (error) {
@@ -62,7 +67,7 @@ export default function TripDetailPage() {
   const handleAddItem = useCallback(async (itemId: number) => {
     if (!tripId) return;
     try {
-      await packingRepo.addItemToPackingList(parseInt(tripId), { item_id: itemId, quantity: 1 }); // Default quantity to 1
+      await tripItemsRepo.addTripItem(parseInt(tripId), { item_id: itemId, quantity: 1 }); // Default quantity to 1
       toast.success("Item added to packing list.");
       refreshTripDetails(); // Refresh to get updated data
     } catch (error) {
@@ -90,10 +95,11 @@ export default function TripDetailPage() {
     );
   }
 
-  const totalItems = trip.packing_list.length;
-  const packedItems = trip.packing_list.filter(item => item.status === ItemStatus.PACKED).length;
-  const unpackedItems = trip.packing_list.filter(item => item.status === ItemStatus.UNPACKED).length;
-  const toBuyItems = trip.packing_list.filter(item => item.status === ItemStatus.TO_BUY).length;
+  console.log(trip);
+  const totalItems = trip.trip_items.length;
+  const packedItems = trip.trip_items.filter(item => item.status === ItemStatus.PACKED).length;
+  const unpackedItems = trip.trip_items.filter(item => item.status === ItemStatus.UNPACKED).length;
+  const toBuyItems = trip.trip_items.filter(item => item.status === ItemStatus.TO_BUY).length;
 
   return (
     <main className="container py-10">
@@ -115,7 +121,7 @@ export default function TripDetailPage() {
         <section>
           <h2 className="text-2xl font-bold mb-4">Bags for this Trip</h2>
           <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-            <TripBagsDisplay bags={trip.bags} />
+            <TripBagsDisplay tripBags={trip.bags} allBags={allBags} tripId={trip.id} refreshTripDetails={refreshTripDetails} />
           </ScrollArea>
         </section>
 
@@ -124,7 +130,7 @@ export default function TripDetailPage() {
           <h2 className="text-2xl font-bold mb-4">Items for this Trip</h2>
           <ScrollArea className="h-[400px] w-full rounded-md border p-4">
             <TripPackingListDisplay
-              packingList={trip.packing_list}
+              packingList={trip.trip_items}
               allItems={allItems}
               onQuantityChange={handleQuantityChange}
               onRemoveItem={handleRemoveItem}

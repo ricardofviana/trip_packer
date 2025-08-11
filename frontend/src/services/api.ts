@@ -1,5 +1,6 @@
+import type { ID, Trip, TripCreate, TripUpdate, BagTemplate, BagTemplateCreate, BagTemplateUpdate, PackingItem, PackingCreate, PackingUpdate, TripDetail as TripDetailType, TripItem, TripItemCreate, TripItemUpdate } from "@/types";
+
 import axios from "axios";
-import type { ID, Trip, TripCreate, TripUpdate, BagTemplate, BagTemplateCreate, BagTemplateUpdate, PackingItem, PackingCreate, PackingUpdate } from "@/types";
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL + "/api",
@@ -7,7 +8,7 @@ export const api = axios.create({
 
 // Trips
 export const getTrips = () => api.get<Trip[]>("/trips");
-export const getTrip = (id: ID) => api.get<Trip>(`/trips/${id}`); // This will return TripDetailResponse
+export const getTrip = (id: ID) => api.get<TripDetailType>(`/trips/${id}`); // This will return TripDetailResponse
 export const createTrip = (data: TripCreate) => api.post<Trip>("/trips", data);
 export const updateTrip = (id: ID, data: TripUpdate) => api.put<Trip>(`/trips/${id}`, data);
 export const deleteTrip = (id: ID) => api.delete(`/trips/${id}`);
@@ -30,6 +31,12 @@ export const getItem = (id: ID) => api.get<ItemTemplate>(`/items/${id}`);
 export const createItem = (data: ItemCreate) => api.post<ItemTemplate>("/items", data);
 export const updateItem = (id: ID, data: ItemUpdate) => api.put<ItemTemplate>(`/items/${id}`, data);
 export const deleteItem = (id: ID) => api.delete(`/items/${id}`);
+
+// Trip Items
+export const getTripItems = (tripId: ID) => api.get<TripItem[]>(`/trips/${tripId}/trip-items`);
+export const addTripItem = (tripId: ID, data: TripItemCreate) => api.post<TripItem>(`/trips/${tripId}/trip-items`, data);
+export const updateTripItem = (tripId: ID, itemId: ID, data: TripItemUpdate) => api.put<TripItem>(`/trips/${tripId}/trip-items/${itemId}`, data);
+export const removeTripItem = (tripId: ID, itemId: ID) => api.delete(`/trips/${tripId}/trip-items/${itemId}`);
 
 // Packing List
 export const getPackingList = (tripId: ID) => api.get<PackingItem[]>(`/trips/${tripId}/packing-list`);
