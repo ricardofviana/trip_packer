@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { tripsRepo } from "@/services/repos/tripsRepo";
 import { tripItemsRepo } from "@/services/repos/tripItemsRepo";
 import { itemsRepo } from "@/services/repos/itemsRepo";
-import { TripDetail as TripDetailType, ItemStatus } from "@/types";
+import { bagsRepo } from "@/services/repos/bagsRepo";
+import { TripDetail as TripDetailType, ItemStatus, BagTemplate } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TripBagsDisplay } from "@/components/TripBagsDisplay";
 import { TripPackingListDisplay } from "@/components/TripPackingListDisplay";
@@ -16,6 +17,7 @@ export default function TripDetailPage() {
 
   const [trip, setTrip] = useState<TripDetailType | undefined>();
   const [allItems, setAllItems] = useState<ItemTemplate[]>([]);
+  const [allBags, setAllBags] = useState<BagTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const refreshTripDetails = useCallback(async () => {
@@ -27,9 +29,12 @@ export default function TripDetailPage() {
 
       const itemsResponse = await itemsRepo.listItems();
       setAllItems(itemsResponse.data);
+
+      const bagsResponse = await bagsRepo.listBags();
+      setAllBags(bagsResponse.data);
     } catch (error) {
-      console.error("Failed to fetch trip details or items:", error);
-      toast.error("Failed to load trip details or items.");
+      console.error("Failed to fetch trip details, items, or bags:", error);
+      toast.error("Failed to load trip details, items, or bags.");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +50,7 @@ export default function TripDetailPage() {
       console.error("Failed to update item quantity:", error);
       toast.error("Failed to update item quantity.");
     }
-  }, [refreshTripDetails]);
+  }, [tripId, refreshTripDetails]);
 
   const handleRemoveItem = useCallback(async (packingItemId: number) => {
     if (!tripId) return;
@@ -116,7 +121,7 @@ export default function TripDetailPage() {
         <section>
           <h2 className="text-2xl font-bold mb-4">Bags for this Trip</h2>
           <ScrollArea className="h-[400px] w-full rounded-md border p-4">
-            <TripBagsDisplay bags={trip.bags} />
+            <TripBagsDisplay tripBags={trip.bags} allBags={allBags} tripId={trip.id} refreshTripDetails={refreshTripDetails} />
           </ScrollArea>
         </section>
 

@@ -1,4 +1,4 @@
-import { TripItem, ItemTemplate, ItemStatus, ID } from "@/types";
+import { TripItem, ItemTemplate, ID } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MinusIcon, PlusIcon } from "lucide-react";
