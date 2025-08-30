@@ -1,10 +1,10 @@
-import { api } from "../api";
-import { BagTemplate, BagTemplateCreate, BagTemplateUpdate } from "../../types";
+import { api } from "@/services/api";
+import type { Bag, BagCreate, BagUpdate, ID } from "@/types";
 
 export const bagsRepo = {
-  listBags: () => api.get<BagTemplate[]>("/bags"),
-  getBag: (bagId: string) => api.get<BagTemplate>(`/bags/${bagId}`),
-  createBag: (bag: BagTemplateCreate) => api.post<BagTemplate>("/bags", bag),
-  updateBag: (bagId: string, bag: BagTemplateUpdate) => api.put<BagTemplate>(`/bags/${bagId}`, bag),
-  deleteBag: (bagId: string) => api.delete<void>(`/bags/${bagId}`),
+  listBags: () => api.get<Bag[]>("/bags").then(res => res.data),
+  getBag: (id: ID) => api.get<Bag>(`/bags/${id}`).then(res => res.data),
+  createBag: (data: BagCreate) => api.post<Bag>("/bags", data).then(res => res.data),
+  updateBag: (id: ID, data: BagUpdate) => api.put<Bag>(`/bags/${id}`, data).then(res => res.data),
+  deleteBag: (id: ID) => api.delete(`/bags/${id}`).then(res => res.data),
 };

@@ -6,8 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Briefcase } from "lucide-react";
-import { tripsRepo } from "@/services/repos/tripsRepo";
-import type { Trip } from "@/types";
+import { tripsRepo } from "@/services/repos";
+import type { Trip, ID } from "@/types";
 
 function durationDays(start: string, end: string) {
   const s = new Date(start);
@@ -30,15 +30,15 @@ export default function TripsPage() {
   const [end, setEnd] = useState<string>(new Date().toISOString().slice(0, 10));
   const navigate = useNavigate();
 
-  const [editingTripId, setEditingTripId] = useState<string | null>(null);
+  const [editingTripId, setEditingTripId] = useState<ID | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedStart, setEditedStart] = useState<string>(new Date().toISOString().slice(0, 10));
   const [editedEnd, setEditedEnd] = useState<string>(new Date().toISOString().slice(0, 10));
 
   const fetchTrips = async () => {
     const response = await tripsRepo.listTrips();
-    console.log("TripsPage: API response data", response.data);
-    setTrips(response.data);
+    console.log("TripsPage: API response data", response);
+    setTrips(response);
   };
 
   useEffect(() => {
@@ -55,10 +55,10 @@ export default function TripsPage() {
     if (!canCreate) return;
     const response = await tripsRepo.createTrip({ name: name.trim(), start_date: start, end_date: end });
     fetchTrips();
-    navigate(`/trips/${response.data.id}`);
+    navigate(`/trips/${response.id}`);
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: ID) => {
     if (!confirm("Delete this trip? This also removes its bag and items.")) return;
     await tripsRepo.deleteTrip(id);
     fetchTrips();
@@ -71,7 +71,7 @@ export default function TripsPage() {
     setEditedEnd(trip.end_date);
   };
 
-  const saveEdit = async (id: number) => {
+  const saveEdit = async (id: ID) => {
     if (!canSave) return;
     await tripsRepo.updateTrip(id, { name: editedName.trim(), start_date: editedStart, end_date: editedEnd });
     setEditingTripId(null);

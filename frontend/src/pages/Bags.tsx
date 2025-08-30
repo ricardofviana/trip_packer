@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { bagTemplatesRepo } from "@/services/repos/bagTemplatesRepo";
-import { BagType, BagTemplate } from "@/types";
+import { bagsRepo } from "@/services/repos";
+import { BagType, Bag, ID } from "@/types";
 
-export default function BagTemplatesPage() {
-  const [bags, setBags] = useState<BagTemplate[]>([]);
+export default function BagsPage() {
+  const [bags, setBags] = useState<Bag[]>([]);
   const [type, setType] = useState(BagType.BACKPACK);
   const [name, setName] = useState("");
   const [editingBagId, setEditingBagId] = useState<ID | null>(null);
@@ -21,11 +21,11 @@ export default function BagTemplatesPage() {
   const fetchBags = async () => {
     setIsLoading(true);
     try {
-      const response = await bagTemplatesRepo.listBags();
-      setBags(response.data);
+      const response = await bagsRepo.listBags();
+      setBags(response);
     } catch (error) {
       console.error("Failed to fetch bags:", error);
-      toast.error("Failed to load bag templates.");
+      toast.error("Failed to load bags.");
       setBags([]);
     } finally {
       setIsLoading(false);
@@ -33,9 +33,9 @@ export default function BagTemplatesPage() {
   };
 
   useEffect(() => {
-    document.title = "Bag Templates — Trip Packer";
+    document.title = "Bags — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Manage reusable bag templates to quickly build trips.");
+    if (meta) meta.setAttribute("content", "Manage reusable bags to quickly build trips.");
     fetchBags();
   }, []);
 
@@ -47,35 +47,35 @@ export default function BagTemplatesPage() {
     setIsLoading(true);
     try {
       const newBag = { name: name.trim(), type };
-      const response = await bagTemplatesRepo.createBag(newBag);
-      setBags((prevBags) => [...prevBags, response.data]);
+      const response = await bagsRepo.createBag(newBag);
+      setBags((prevBags) => [...prevBags, response]);
       setName("");
       setType(BagType.BACKPACK);
-      toast.success("Bag template created successfully!");
+      toast.success("Bag created successfully!");
     } catch (error) {
       console.error("Failed to create bag:", error);
-      toast.error("Failed to create bag template.");
+      toast.error("Failed to create bag.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const remove = async (id: ID) => {
-    if (!confirm("Delete this bag template? This action cannot be undone.")) return;
+    if (!confirm("Delete this bag? This action cannot be undone.")) return;
     setIsLoading(true);
     try {
-      await bagTemplatesRepo.deleteBag(id);
+      await bagsRepo.deleteBag(id);
       setBags((prevBags) => prevBags.filter((bag) => bag.id !== id));
-      toast.success("Bag template deleted.");
+      toast.success("Bag deleted.");
     } catch (error) {
       console.error("Failed to delete bag:", error);
-      toast.error("Failed to delete bag template.");
+      toast.error("Failed to delete bag.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const startEditing = (bag: BagTemplate) => {
+  const startEditing = (bag: Bag) => {
     setEditingBagId(bag.id);
     setEditedName(bag.name);
     setEditedType(bag.type);
@@ -86,15 +86,15 @@ export default function BagTemplatesPage() {
     setIsLoading(true);
     try {
       const updatedBag = { name: editedName.trim(), type: editedType };
-      const response = await bagTemplatesRepo.updateBag(id, updatedBag);
+      const response = await bagsRepo.updateBag(id, updatedBag);
       setBags((prevBags) =>
-        prevBags.map((bag) => (bag.id === id ? response.data : bag))
+        prevBags.map((bag) => (bag.id === id ? response : bag))
       );
       setEditingBagId(null);
-      toast.success("Bag template updated.");
+      toast.success("Bag updated.");
     } catch (error) {
       console.error("Failed to save bag:", error);
-      toast.error("Failed to save bag template.");
+      toast.error("Failed to save bag.");
     } finally {
       setIsLoading(false);
     }
@@ -107,12 +107,12 @@ export default function BagTemplatesPage() {
   return (
     <main className="container py-10">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Bag templates</h1>
+        <h1 className="text-3xl font-bold">Bags</h1>
       </header>
       <section className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Create bag template</CardTitle>
+            <CardTitle>Create bag</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">

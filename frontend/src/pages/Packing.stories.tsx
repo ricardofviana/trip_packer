@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import TripsPacking from './TripsPacking';
+import Packing from './Packing';
 
 const meta = {
-  component: TripsPacking,
-} satisfies Meta<typeof TripsPacking>;
+  component: Packing,
+} satisfies Meta<typeof Packing>;
 
 export default meta;
 

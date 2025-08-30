@@ -4,31 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ItemTemplate, PackingItem, ID, ItemStatus } from "@/types";
-import { itemsRepo } from "@/services/repos/itemsRepo";
-import { packingRepo } from "@/services/repos/packingRepo";
-import { bagsRepo } from "@/services/repos/bagsRepo";
+import { Item, Packing, ID, ItemStatus } from "@/types";
+import { itemsRepo, packingRepo, bagsRepo } from "@/services/repos";
 
 interface PackingListManagerProps {
   tripId: ID;
-  packingList: PackingItem[];
+  packingList: Packing[];
   refreshTripDetails: () => void;
 }
 
 export function PackingListManager({ tripId, packingList, refreshTripDetails }: PackingListManagerProps) {
-  const [allItemsTemplates, setAllItemsTemplates] = useState<ItemTemplate[]>([]);
-  const [selectedItemTemplateId, setSelectedItemTemplateId] = useState<ID | "">("");
+  const [allItems, setAllItems] = useState<Item[]>([]);
+  const [selectedItemId, setSelectedItemId] = useState<ID | "">("");
   const [defaultBagId, setDefaultBagId] = useState<ID | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchAllItemsTemplates = async () => {
+  const fetchAllItems = async () => {
     setIsLoading(true);
     try {
       const response = await itemsRepo.listItems();
-      setAllItemsTemplates(response.data);
+      setAllItems(response);
     } catch (error) {
-      console.error("Failed to fetch all item templates:", error);
-      toast.error("Failed to load available item templates.");
+      console.error("Failed to fetch all items:", error);
+      toast.error("Failed to load available items.");
     } finally {
       setIsLoading(false);
     }
@@ -37,13 +35,12 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
   const fetchDefaultBag = async () => {
     try {
       const response = await bagsRepo.listBags();
-      const defaultBag = response.data.find(bag => bag.name === "Default Bag");
+      const defaultBag = response.find(bag => bag.name === "Default Bag");
       if (defaultBag) {
         setDefaultBagId(defaultBag.id);
       } else {
-        // If no default bag exists, create one
         const newBagResponse = await bagsRepo.createBag({ name: "Default Bag", type: "BACKPACK" });
-        setDefaultBagId(newBagResponse.data.id);
+        setDefaultBagId(newBagResponse.id);
       }
     } catch (error) {
       console.error("Failed to fetch or create default bag:", error);
@@ -52,17 +49,17 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
   };
 
   useEffect(() => {
-    fetchAllItemsTemplates();
+    fetchAllItems();
     fetchDefaultBag();
   }, []);
 
   const handleAddItemToPackingList = async () => {
-    if (selectedItemTemplateId === "" || defaultBagId === null) return;
+    if (selectedItemId === "" || defaultBagId === null) return;
     setIsLoading(true);
     try {
-      await packingRepo.addItemToPackingList(tripId, { item_id: selectedItemTemplateId as ID, bag_id: defaultBagId });
+      await packingRepo.createPacking(tripId, { item_id: selectedItemId as ID, bag_id: defaultBagId, quantity: 1, status: ItemStatus.UNPACKED });
       toast.success("Item added to packing list successfully!");
-      setSelectedItemTemplateId("");
+      setSelectedItemId("");
       refreshTripDetails();
     } catch (error) {
       console.error("Failed to add item to packing list:", error);
@@ -72,11 +69,11 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  const handleRemovePackingItem = async (item: PackingItem) => {
+  const handleRemovePackingItem = async (item: Packing) => {
     if (!confirm("Remove this item from the packing list?")) return;
     setIsLoading(true);
     try {
-      await packingRepo.removeItemFromPackingList(tripId, item.item_id, item.bag_id);
+      await packingRepo.deletePacking(tripId, item.item_id, item.bag_id);
       toast.success("Item removed from packing list successfully!");
       refreshTripDetails();
     } catch (error) {
@@ -87,10 +84,10 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  const handleUpdatePackingItemStatus = async (item: PackingItem, newStatus: ItemStatus) => {
+  const handleUpdatePackingItemStatus = async (item: Packing, newStatus: ItemStatus) => {
     setIsLoading(true);
     try {
-      await packingRepo.updatePackingListItem(tripId, item.item_id, item.bag_id, { status: newStatus });
+      await packingRepo.updatePacking(tripId, item.item_id, item.bag_id, { status: newStatus });
       toast.success("Packing item status updated!");
       refreshTripDetails();
     } catch (error) {
@@ -101,10 +98,10 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  const handleUpdatePackingItemQuantity = async (item: PackingItem, newQuantity: number) => {
+  const handleUpdatePackingItemQuantity = async (item: Packing, newQuantity: number) => {
     setIsLoading(true);
     try {
-      await packingRepo.updatePackingListItem(tripId, item.item_id, item.bag_id, { quantity: newQuantity });
+      await packingRepo.updatePacking(tripId, item.item_id, item.bag_id, { quantity: newQuantity });
       toast.success("Packing item quantity updated!");
       refreshTripDetails();
     } catch (error) {
@@ -115,8 +112,6 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
   };
 
-  
-
   const groupedPackingList = packingList.reduce((acc, item) => {
     const bagName = item.bag ? item.bag.name : "Unassigned Items";
     if (!acc[bagName]) {
@@ -124,9 +119,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
     }
     acc[bagName].push(item);
     return acc;
-  }, {} as Record<string, PackingItem[]>);
-
-
+  }, {} as Record<string, Packing[]>);
 
   return (
     <div className="grid gap-4">
@@ -136,15 +129,15 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
         </CardHeader>
         <CardContent className="space-y-4">
           <Select
-            value={selectedItemTemplateId.toString()}
-            onValueChange={(value) => setSelectedItemTemplateId(parseInt(value))}
-            disabled={isLoading || allItemsTemplates.length === 0}
+            value={selectedItemId.toString()}
+            onValueChange={(value) => setSelectedItemId(parseInt(value))}
+            disabled={isLoading || allItems.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select an item template" />
+              <SelectValue placeholder="Select an item" />
             </SelectTrigger>
             <SelectContent>
-              {allItemsTemplates.map((template) => (
+              {allItems.map((template) => (
                 <SelectItem key={template.id} value={template.id.toString()}>
                   {template.name} ({template.category})
                 </SelectItem>
@@ -153,7 +146,7 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
           </Select>
           <Button
             onClick={handleAddItemToPackingList}
-            disabled={isLoading || selectedItemTemplateId === "" || defaultBagId === null}
+            disabled={isLoading || selectedItemId === "" || defaultBagId === null}
             className="w-full"
           >
             {isLoading ? "Adding..." : "Add Item"}
@@ -186,6 +179,14 @@ export function PackingListManager({ tripId, packingList, refreshTripDetails }: 
                     onValueChange={(value) => handleUpdatePackingItemStatus(item, value as ItemStatus)}
                     disabled={isLoading}
                   >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={ItemStatus.UNPACKED}>Unpacked</SelectItem>
+                      <SelectItem value={ItemStatus.PACKED}>Packed</SelectItem>
+                      <SelectItem value={ItemStatus.TO_BUY}>To Buy</SelectItem>
+                    </SelectContent>
                   </Select>
                   <Button
                     variant="ghost"

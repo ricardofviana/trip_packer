@@ -12,9 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { BagTemplate, TripItem, ID } from "@/types";
-import { bagsRepo } from "@/services/repos/bagsRepo";
-import * as api from "@/services/api"; // Import all from api
+import { Bag, TripItem, ID, Packing } from "@/types";
+import { bagsRepo, packingRepo } from "@/services/repos";
 import { toast } from "@/components/ui/sonner";
 import { PackingCreate } from "@/types"; // Import PackingCreate
 
@@ -33,28 +32,43 @@ export function ManageItemBagsDialog({
   tripId,
   onSave,
 }: ManageItemBagsDialogProps) {
-  const [allBags, setAllBags] = useState<BagTemplate[]>([]);
+  const [allBags, setAllBags] = useState<Bag[]>([]);
   const [selectedBagIds, setSelectedBagIds] = useState<Set<ID>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [packingList, setPackingList] = useState<Packing[]>([]);
 
   useEffect(() => {
     const fetchBags = async () => {
       try {
         const response = await bagsRepo.listBags();
-        setAllBags(response.data);
+        setAllBags(response);
       } catch (error) {
         console.error("Failed to fetch bags:", error);
         toast.error("Failed to load bags for association.");
       }
     };
-    fetchBags();
-  }, []);
+    const fetchPackingList = async () => {
+      try {
+        const response = await packingRepo.listPacking(tripId);
+        setPackingList(response);
+      } catch (error) {
+        console.error("Failed to fetch packing list:", error);
+        toast.error("Failed to load packing list.");
+      }
+    };
+    if (isOpen) {
+      fetchBags();
+      fetchPackingList();
+    }
+  }, [isOpen, tripId]);
 
   useEffect(() => {
-    if (tripItem) {
-      setSelectedBagIds(new Set(tripItem.bag_ids));
+    if (tripItem && packingList.length > 0) {
+      const itemPacking = packingList.filter(p => p.item_id === tripItem.item_id);
+      const bagIds = itemPacking.map(p => p.bag_id);
+      setSelectedBagIds(new Set(bagIds));
     }
-  }, [tripItem]);
+  }, [tripItem, packingList]);
 
   const handleCheckboxChange = (bagId: ID, checked: boolean) => {
     setSelectedBagIds((prev) => {
@@ -73,7 +87,7 @@ export function ManageItemBagsDialog({
 
     setIsLoading(true);
     try {
-      const currentBagIds = new Set(tripItem.bag_ids);
+      const currentBagIds = new Set(packingList.filter(p => p.item_id === tripItem.item_id).map(p => p.bag_id));
       const newBagIds = selectedBagIds;
 
       const addedBagIds = Array.from(newBagIds).filter(
@@ -83,11 +97,11 @@ export function ManageItemBagsDialog({
         (bagId) => !newBagIds.has(bagId)
       );
 
-      const promises: Promise<PackingItem>[] = [];
+      const promises: Promise<any>[] = [];
 
       for (const bagId of addedBagIds) {
         promises.push(
-          api.addItemToPackingList(parseInt(tripId), {
+          packingRepo.createPacking(parseInt(tripId), {
             item_id: tripItem.item_id,
             bag_id: bagId,
             quantity: tripItem.quantity,
@@ -98,7 +112,7 @@ export function ManageItemBagsDialog({
 
       for (const bagId of removedBagIds) {
         promises.push(
-          api.deletePacking(parseInt(tripId), tripItem.item_id, bagId)
+          packingRepo.deletePacking(parseInt(tripId), tripItem.item_id, bagId)
         );
       }
 

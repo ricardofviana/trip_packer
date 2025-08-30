@@ -8,7 +8,7 @@ from trip_packer.routers import bags, items, packing, trip_items, trips
 
 app = FastAPI()
 
-if sys.platform == "win32":
+if sys.platform == "win32":  # pragma: no cover
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 

@@ -7,10 +7,10 @@ import { Navbar } from "./components/Navbar";
 import NotFound from "./pages/NotFound";
 import TripsPage from "./pages/Trips";
 import TripDetailPage from "./pages/TripDetail";
-import ItemsTemplatesPage from "./pages/ItemsTemplates";
-import BagTemplatesPage from "./pages/BagTemplates";
+import ItemsPage from "./pages/Items";
+import BagsPage from "./pages/Bags";
 import LearnMorePage from "./pages/LearnMore";
-import TripsPackingPage from "./pages/TripsPacking";
+import PackingPage from "./pages/Packing";
 
 const queryClient = new QueryClient();
 
@@ -24,10 +24,10 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/trips" element={<TripsPage />} />
           <Route path="/trips/:tripId" element={<TripDetailPage />} />
-          <Route path="/items" element={<ItemsTemplatesPage />} />
-          <Route path="/bags" element={<BagTemplatesPage />} />
+          <Route path="/items" element={<ItemsPage />} />
+          <Route path="/bags" element={<BagsPage />} />
           <Route path="/learn-more" element={<LearnMorePage />} />
-          <Route path="/trips/:tripId/packing" element={<TripsPackingPage />} />
+          <Route path="/trips/:tripId/packing" element={<PackingPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

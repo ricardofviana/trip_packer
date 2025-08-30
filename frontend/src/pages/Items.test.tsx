@@ -2,19 +2,19 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 
-import { itemsRepo } from '@/services/repos/itemsRepo';
-import ItemsTemplatesPage from './ItemsTemplates';
+import { itemsRepo } from '@/services/repos';
+import ItemsPage from './Items';
 
 // Mock the itemsRepo to avoid actual API calls
-vi.mock('@/services/repos/itemsRepo');
+vi.mock('@/services/repos');
 
-describe('ItemsTemplatesPage', () => {
+describe('ItemsPage', () => {
   test('should render the page title and the create form', async () => {
     // Arrange: Mock an empty list of items for the initial load
-    vi.mocked(itemsRepo.listItems).mockResolvedValue({ data: [] });
+    vi.mocked(itemsRepo.listItems).mockResolvedValue([]);
 
     // Act
-    render(<ItemsTemplatesPage />);
+    render(<ItemsPage />);
 
     // Wait for initial loading to complete
     await waitFor(() => {
@@ -27,8 +27,8 @@ describe('ItemsTemplatesPage', () => {
 
     // Assert
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /item templates/i })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { name: /create item template/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /items/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /create item/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /create/i })).not.toBeDisabled();
     });
@@ -41,10 +41,10 @@ describe('ItemsTemplatesPage', () => {
       { id: '2', name: 'Passport', category: 'DOCUMENTS' },
       { id: '3', name: 'Hiking Boots', category: 'CLOTHING' },
     ];
-    vi.mocked(itemsRepo.listItems).mockResolvedValue({ data: mockItems });
+    vi.mocked(itemsRepo.listItems).mockResolvedValue(mockItems);
 
     // Act
-    render(<ItemsTemplatesPage />);
+    render(<ItemsPage />);
 
     // Assert
     // Use `waitFor` to handle the asynchronous rendering of items

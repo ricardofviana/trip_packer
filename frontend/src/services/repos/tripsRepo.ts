@@ -1,12 +1,16 @@
-import type { ID, Trip, TripCreate, TripUpdate, BagTemplate } from "@/types";
-import { getTrips, getTrip, createTrip, updateTrip, deleteTrip, addBagToTrip, removeBagFromTrip } from "@/services/api";
+import { api } from "@/services/api";
+import type { ID, Trip, TripCreate, TripUpdate, Bag, Item } from "@/types";
 
 export const tripsRepo = {
-  listTrips: getTrips as () => Promise<{ data: Trip }>,
-  getTrip: getTrip as (id: ID) => Promise<{ data: Trip }>,
-  createTrip: createTrip as (data: TripCreate) => Promise<{ data: Trip }>,
-  updateTrip: updateTrip as (id: ID, data: TripUpdate) => Promise<{ data: Trip }>,
-  deleteTrip: deleteTrip as (id: ID) => Promise<{ data: Trip }>,
-  addBagToTrip: addBagToTrip as (tripId: ID, bagId: ID) => Promise<{ data: BagTemplate }>,
-  removeBagFromTrip: removeBagFromTrip as (tripId: ID, bagId: ID) => Promise<{ data: BagTemplate }>
+  listTrips: () => api.get<Trip[]>("/trips").then(res => res.data),
+  getTrip: (id: ID) => api.get<Trip>(`/trips/${id}`).then(res => res.data),
+  createTrip: (data: TripCreate) => api.post<Trip>("/trips", data).then(res => res.data),
+  updateTrip: (id: ID, data: TripUpdate) => api.put<Trip>(`/trips/${id}`, data).then(res => res.data),
+  deleteTrip: (id: ID) => api.delete(`/trips/${id}`).then(res => res.data),
+
+  listTripBags: (tripId: ID) => api.get<Bag[]>(`/trips/${tripId}/bags`).then(res => res.data),
+  addTripBag: (tripId: ID, bagId: ID) => api.post<Bag>(`/trips/${tripId}/bags/${bagId}`).then(res => res.data),
+  removeTripBag: (tripId: ID, bagId: ID) => api.delete(`/trips/${tripId}/bags/${bagId}`).then(res => res.data),
+
+  listTripItems: (tripId: ID) => api.get<Item[]>(`/trips/${tripId}/items`).then(res => res.data),
 };

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import sys
 
 import pytest
@@ -29,6 +30,14 @@ def client(session):
 
 @pytest.fixture(scope="session")
 def engine():
+    # First, ensure DOCKER_HOST is unset to avoid conflicts
+    if "DOCKER_HOST" in os.environ:
+        del os.environ["DOCKER_HOST"]
+
+    # Set the testcontainers environment variable
+    os.environ["TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE"] = "/var/run/docker.sock"
+
+    # Don't pass docker_client_kw, let testcontainers handle it via environment
     with PostgresContainer("postgres:16", driver="psycopg") as postgres:
         _engine = create_async_engine(postgres.get_connection_url())
         yield _engine

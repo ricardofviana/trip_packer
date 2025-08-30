@@ -2,11 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
-import { tripsRepo } from "@/services/repos/tripsRepo";
-import { tripItemsRepo } from "@/services/repos/tripItemsRepo";
-import { itemsRepo } from "@/services/repos/itemsRepo";
-import { bagsRepo } from "@/services/repos/bagsRepo";
-import { TripDetail as TripDetailType, ItemStatus, BagTemplate } from "@/types";
+import { tripsRepo, tripItemsRepo, itemsRepo, bagsRepo } from "@/services/repos";
+import { TripDetail as TripDetailType, ItemStatus } from "@/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TripBagsDisplay } from "@/components/TripBagsDisplay";
 import { TripPackingListDisplay } from "@/components/TripPackingListDisplay";
@@ -16,8 +13,8 @@ export default function TripDetailPage() {
   const navigate = useNavigate();
 
   const [trip, setTrip] = useState<TripDetailType | undefined>();
-  const [allItems, setAllItems] = useState<ItemTemplate[]>([]);
-  const [allBags, setAllBags] = useState<BagTemplate[]>([]);
+  const [allItems, setAllItems] = useState<Item[]>([]);
+  const [allBags, setAllBags] = useState<Bag[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const refreshTripDetails = useCallback(async () => {
@@ -25,13 +22,13 @@ export default function TripDetailPage() {
     setIsLoading(true);
     try {
       const tripResponse = await tripsRepo.getTrip(tripId);
-      setTrip(tripResponse.data);
+      setTrip(tripResponse);
 
       const itemsResponse = await itemsRepo.listItems();
-      setAllItems(itemsResponse.data);
+      setAllItems(itemsResponse);
 
       const bagsResponse = await bagsRepo.listBags();
-      setAllBags(bagsResponse.data);
+      setAllBags(bagsResponse);
     } catch (error) {
       console.error("Failed to fetch trip details, items, or bags:", error);
       toast.error("Failed to load trip details, items, or bags.");
@@ -61,7 +58,7 @@ export default function TripDetailPage() {
     } catch (error) {
       console.error("Failed to remove item:", error);
       toast.error("Failed to remove item.");
-    }
+    } 
   }, [tripId, refreshTripDetails]);
 
   const handleAddItem = useCallback(async (itemId: number) => {

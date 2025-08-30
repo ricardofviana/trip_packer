@@ -2,7 +2,6 @@ import { BagTemplate, ID } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { addBagToTrip, removeBagFromTrip } from "@/services/api";
 
 interface TripBagsDisplayProps {
   tripBags: BagTemplate[];

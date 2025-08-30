@@ -3,45 +3,44 @@ import { toast } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BagTemplate, ID } from "@/types";
-import { bagTemplatesRepo } from "@/services/repos/bagTemplatesRepo";
-import { tripsRepo } from "@/services/repos/tripsRepo";
+import { Bag, ID } from "@/types";
+import { bagsRepo, tripsRepo } from "@/services/repos";
 
-interface BagTemplatesManagerProps {
+interface BagsManagerProps {
   tripId: ID;
-  bags: BagTemplate[];
+  bags: Bag[];
   refreshTripDetails: () => void;
 }
 
-export function BagTemplatesManager({ tripId, bags, refreshTripDetails }: BagTemplatesManagerProps) {
-  const [allBagTemplates, setAllBagTemplates] = useState<BagTemplate[]>([]);
-  const [selectedBagTemplateId, setSelectedBagTemplateId] = useState<ID | "">("");
+export function BagsManager({ tripId, bags, refreshTripDetails }: BagsManagerProps) {
+  const [allBags, setAllBags] = useState<Bag[]>([]);
+  const [selectedBagId, setSelectedBagId] = useState<ID | "">("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchAllBagTemplates = async () => {
+  const fetchAllBags = async () => {
     setIsLoading(true);
     try {
-      const response = await bagTemplatesRepo.listBags();
-      setAllBagTemplates(response.data);
+      const response = await bagsRepo.listBags();
+      setAllBags(response);
     } catch (error) {
-      console.error("Failed to fetch all bag templates:", error);
-      toast.error("Failed to load available bag templates.");
+      console.error("Failed to fetch all bags:", error);
+      toast.error("Failed to load available bags.");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAllBagTemplates();
+    fetchAllBags();
   }, []);
 
   const handleAddBagToTrip = async () => {
-    if (selectedBagTemplateId === "") return;
+    if (selectedBagId === "") return;
     setIsLoading(true);
     try {
-      await tripsRepo.addBagToTrip(tripId, selectedBagTemplateId as ID);
+      await tripsRepo.addTripBag(tripId, selectedBagId as ID);
       toast.success("Bag added to trip successfully!");
-      setSelectedBagTemplateId("");
+      setSelectedBagId("");
       refreshTripDetails();
     } catch (error) {
       console.error("Failed to add bag to trip:", error);
@@ -55,7 +54,7 @@ export function BagTemplatesManager({ tripId, bags, refreshTripDetails }: BagTem
     if (!confirm("Remove this bag from the trip?")) return;
     setIsLoading(true);
     try {
-      await tripsRepo.removeBagFromTrip(tripId, bagId);
+      await tripsRepo.removeTripBag(tripId, bagId);
       toast.success("Bag removed from trip successfully!");
       refreshTripDetails();
     } catch (error) {
@@ -66,7 +65,7 @@ export function BagTemplatesManager({ tripId, bags, refreshTripDetails }: BagTem
     }
   };
 
-  const availableBagTemplates = allBagTemplates.filter(
+  const availableBags = allBags.filter(
     (template) => !bags.some((bag) => bag.id === template.id)
   );
 
@@ -78,15 +77,15 @@ export function BagTemplatesManager({ tripId, bags, refreshTripDetails }: BagTem
         </CardHeader>
         <CardContent className="space-y-4">
           <Select
-            value={selectedBagTemplateId.toString()}
-            onValueChange={(value) => setSelectedBagTemplateId(parseInt(value))}
-            disabled={isLoading || availableBagTemplates.length === 0}
+            value={selectedBagId.toString()}
+            onValueChange={(value) => setSelectedBagId(parseInt(value))}
+            disabled={isLoading || availableBags.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select a bag template" />
+              <SelectValue placeholder="Select a bag" />
             </SelectTrigger>
             <SelectContent>
-              {availableBagTemplates.map((template) => (
+              {availableBags.map((template) => (
                 <SelectItem key={template.id} value={template.id.toString()}>
                   {template.name} ({template.type})
                 </SelectItem>
@@ -95,7 +94,7 @@ export function BagTemplatesManager({ tripId, bags, refreshTripDetails }: BagTem
           </Select>
           <Button
             onClick={handleAddBagToTrip}
-            disabled={isLoading || selectedBagTemplateId === ""}
+            disabled={isLoading || selectedBagId === ""}
             className="w-full"
           >
             {isLoading ? "Adding..." : "Add Bag"}

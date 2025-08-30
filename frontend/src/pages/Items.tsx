@@ -6,14 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { itemsRepo, type ItemTemplate } from "@/services/repos/itemsRepo";
-import { ItemCategory } from "@/types";
+import { itemsRepo } from "@/services/repos";
+import { ItemCategory, Item, ID } from "@/types";
 
-export default function ItemsTemplatesPage() {
-  const [items, setItems] = useState<ItemTemplate[]>([]);
+export default function ItemsPage() {
+  const [items, setItems] = useState<Item[]>([]);
   const [name, setName] = useState("");
   const [category, setCategory] = useState(ItemCategory.CLOTHING);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editingItemId, setEditingItemId] = useState<ID | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedCategory, setEditedCategory] = useState(ItemCategory.CLOTHING);
   const [isLoading, setIsLoading] = useState(false);
@@ -22,10 +22,10 @@ export default function ItemsTemplatesPage() {
     setIsLoading(true);
     try {
       const response = await itemsRepo.listItems();
-      setItems(response.data);
+      setItems(response);
     } catch (error) {
       console.error("Failed to fetch items:", error);
-      toast.error("Failed to load item templates.");
+      toast.error("Failed to load items.");
       setItems([]); // Ensure items is always an array
     } finally {
       setIsLoading(false);
@@ -33,9 +33,9 @@ export default function ItemsTemplatesPage() {
   };
 
   useEffect(() => {
-    document.title = "Item Templates — Trip Packer";
+    document.title = "Items — Trip Packer";
     const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", "Manage reusable item templates for faster packing.");
+    if (meta) meta.setAttribute("content", "Manage reusable items for faster packing.");
     fetchItems();
   }, []);
 
@@ -48,53 +48,53 @@ export default function ItemsTemplatesPage() {
     try {
       const newItem = { name: name.trim(), category };
       const response = await itemsRepo.createItem(newItem);
-      setItems((prevItems) => [...prevItems, response.data]);
+      setItems((prevItems) => [...prevItems, response]);
       setName("");
       setCategory(ItemCategory.CLOTHING);
-      toast.success("Item template created successfully!");
+      toast.success("Item created successfully!");
     } catch (error) {
       console.error("Failed to create item:", error);
-      toast.error("Failed to create item template.");
+      toast.error("Failed to create item.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const remove = async (id: string) => {
-    if (!confirm("Delete this template? This action cannot be undone.")) return;
+  const remove = async (id: ID) => {
+    if (!confirm("Delete this item? This action cannot be undone.")) return;
     setIsLoading(true);
     try {
       await itemsRepo.deleteItem(id);
       setItems((prevItems) => prevItems.filter((item) => item.id !== id));
-      toast.success("Item template deleted.");
+      toast.success("Item deleted.");
     } catch (error) {
       console.error("Failed to delete item:", error);
-      toast.error("Failed to delete item template.");
+      toast.error("Failed to delete item.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const startEditing = (item: ItemTemplate) => {
+  const startEditing = (item: Item) => {
     setEditingItemId(item.id);
     setEditedName(item.name);
     setEditedCategory(item.category);
   };
 
-  const saveEdit = async (id: string) => {
+  const saveEdit = async (id: ID) => {
     if (!canSave) return;
     setIsLoading(true);
     try {
       const updatedItem = { name: editedName.trim(), category: editedCategory };
       const response = await itemsRepo.updateItem(id, updatedItem);
       setItems((prevItems) =>
-        prevItems.map((item) => (item.id === id ? response.data : item))
+        prevItems.map((item) => (item.id === id ? response : item))
       );
       setEditingItemId(null);
-      toast.success("Item template updated.");
+      toast.success("Item updated.");
     } catch (error) {
       console.error("Failed to save item:", error);
-      toast.error("Failed to save item template.");
+      toast.error("Failed to save item.");
     } finally {
       setIsLoading(false);
     }
@@ -108,13 +108,13 @@ export default function ItemsTemplatesPage() {
   return (
     <main className="container py-10">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">Item templates</h1>
+        <h1 className="text-3xl font-bold">Items</h1>
       </header>
 
       <section className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader>
-            <CardTitle>Create item template</CardTitle>
+            <CardTitle>Create item</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2 text-left">

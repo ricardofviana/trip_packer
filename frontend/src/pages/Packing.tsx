@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -8,14 +9,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { tripItemsRepo } from "@/services/repos/tripItemsRepo";
-import { tripLuggageRepo } from "@/services/repos/tripLuggageRepo";
-import { BagTemplate, ItemStatus, TripItem } from "@/types";
+import { tripItemsRepo, tripsRepo, packingRepo } from "@/services/repos";
+import { Bag, ItemStatus, TripItem, Packing } from "@/types";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ManageItemBagsDialog } from "@/components/ManageItemBagsDialog"; // New import
-import * as api from "@/services/api"; // Import api
-
+import { ManageItemBagsDialog } from "@/components/ManageItemBagsDialog";
 
 function badgeVariant(status: ItemStatus): "default" | "secondary" | "destructive" | "outline" {
   switch (status) {
@@ -33,25 +31,26 @@ function badgeVariant(status: ItemStatus): "default" | "secondary" | "destructiv
 export default function TripsPacking() {
   const { tripId } = useParams();
 
-  const [isManageBagsDialogOpen, setIsManageBagsDialogOpen] = useState(false); // New state
-  const [itemToManageBagsFor, setItemToManageBagsFor] = useState<TripItem | null>(null); // New state
+  const [isManageBagsDialogOpen, setIsManageBagsDialogOpen] = useState(false);
+  const [itemToManageBagsFor, setItemToManageBagsFor] = useState<TripItem | null>(null);
 
-  const [bags, setBags] = useState<BagTemplate[]>([]);
-  const [isLoadingBags, setIsLoadingBags] = useState(false); // Renamed to avoid conflict
+  const [bags, setBags] = useState<Bag[]>([]);
+  const [isLoadingBags, setIsLoadingBags] = useState(false);
   const [selectedBagId, setSelectedBagId] = useState<string | undefined>(undefined);
 
   const [allPackingItems, setAllPackingItems] = useState<TripItem[]>([]);
-  const [isLoadingAllPackingItems, setIsLoadingAllPackingItems] = useState(false); // New loading state
+  const [isLoadingAllPackingItems, setIsLoadingAllPackingItems] = useState(false);
+  const [packingList, setPackingList] = useState<Packing[]>([]);
 
 
   const fetchBags = useCallback(async () => {
     if (!tripId) return;
     setIsLoadingBags(true);
     try {
-      const response = await tripLuggageRepo.listTripLuggage(tripId);
-      setBags(response.data);
-      if (response.data.length > 0 && !selectedBagId) {
-        setSelectedBagId(response.data[0].id.toString()); // Select the first bag by default
+      const response = await tripsRepo.listTripBags(tripId);
+      setBags(response);
+      if (response.length > 0 && !selectedBagId) {
+        setSelectedBagId(response[0].id.toString());
       }
     } catch (error) {
       console.error("Failed to fetch bags:", error);
@@ -65,8 +64,8 @@ export default function TripsPacking() {
     if (!tripId) return;
     setIsLoadingAllPackingItems(true);
     try {
-      const response = await tripItemsRepo.getTripItems(parseInt(tripId));
-      setAllPackingItems(response.data);
+      const response = await tripItemsRepo.listTripItems(tripId);
+      setAllPackingItems(response);
     } catch (error) {
       console.error("Failed to fetch all packing items:", error);
       toast.error("Failed to load all packing items.");
@@ -75,10 +74,22 @@ export default function TripsPacking() {
     }
   }, [tripId]);
 
+  const fetchPackingList = useCallback(async () => {
+    if (!tripId) return;
+    try {
+      const response = await packingRepo.listPacking(tripId);
+      setPackingList(response);
+    } catch (error) {
+      console.error("Failed to fetch packing list:", error);
+      toast.error("Failed to load packing list.");
+    }
+  }, [tripId]);
+
   useEffect(() => {
     fetchBags();
-    fetchAllPackingItems(); // Fetch all packing items when tripId changes
-  }, [tripId, fetchBags, fetchAllPackingItems]);
+    fetchAllPackingItems();
+    fetchPackingList();
+  }, [tripId, fetchBags, fetchAllPackingItems, fetchPackingList]);
 
 
 
@@ -89,7 +100,6 @@ export default function TripsPacking() {
       </header>
 
       <div className="flex gap-6">
-        {/* Left Column: ScrollArea for all items */}
         <div className="w-1/4">
           <h2 className="text-xl font-bold mb-4">All Trip Items</h2>
           {isLoadingAllPackingItems ? (
@@ -99,38 +109,39 @@ export default function TripsPacking() {
           ) : (
             <ScrollArea className="h-[600px] w-full rounded-md border">
               <div className="p-4">
-                {allPackingItems.map((item) => (
-                  item.item && (
-                    <React.Fragment key={item.item_id}>
-                      <Card className="mb-2">
-                        <CardHeader className="p-2">
-                          <CardTitle className="text-sm">{item.item.name} (x{item.quantity})</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-2 pt-0">
-                          <Badge variant={badgeVariant(item.status)}>{item.status.replace("_", " ")}</Badge>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-2"
-                            onClick={() => {
-                              setItemToManageBagsFor(item);
-                              setIsManageBagsDialogOpen(true);
-                            }}
-                          >
-                            Manage Bags
-                          </Button>
-                        </CardContent>
-                      </Card>
-                      <Separator className="my-2" />
-                    </React.Fragment>
+                {allPackingItems.map((item) => {
+                  const isAssociated = packingList.some(p => p.item_id === item.item_id);
+                  return (
+                    item.item && (
+                      <React.Fragment key={item.item_id}>
+                        <Card className={`mb-2 ${isAssociated ? 'bg-green-100' : ''}`}>
+                          <CardHeader className="p-2">
+                            <CardTitle className="text-sm">{item.item.name} (x{item.quantity})</CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-2 pt-0">
+                            <Button
+                              variant={isAssociated ? "default" : "outline"} // Keep variant based on association
+                              size="sm"
+                              className={cn("mt-2 text-black", isAssociated && "bg-green-100" )}
+                              onClick={() => {
+                                setItemToManageBagsFor(item);
+                                setIsManageBagsDialogOpen(true);
+                              }}
+                            >
+                              Manage Bags
+                            </Button>
+                          </CardContent>
+                        </Card>
+                        <Separator className="my-2" />
+                      </React.Fragment>
+                    )
                   )
-                ))}
+                })}
               </div>
             </ScrollArea>
           )}
         </div>
 
-        {/* Right Column: Tabs for bags */}
         <div className="w-3/4">
           {isLoadingBags ? (
             <p>Loading bags...</p>
@@ -165,8 +176,9 @@ export default function TripsPacking() {
           tripItem={itemToManageBagsFor}
           tripId={tripId!}
           onSave={() => {
-            fetchAllPackingItems(); // Refresh all items
-            fetchBags(); // Refresh bags (to update counts if needed)
+            fetchAllPackingItems();
+            fetchBags();
+            fetchPackingList();
           }}
         />
       )}
@@ -174,8 +186,8 @@ export default function TripsPacking() {
   );
 }
 
-function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: { bag: BagTemplate; filter: ItemStatus | "ALL"; onChange: () => void; isLoading: boolean; tripId: string }) {
-  const [items, setItems] = useState<TripItem[]>([]);
+function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: { bag: Bag; filter: ItemStatus | "ALL"; onChange: () => void; isLoading: boolean; tripId: string }) {
+  const [items, setItems] = useState<Packing[]>([]);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [editedQuantity, setEditedQuantity] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -183,26 +195,13 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await api.getPackingList(parseInt(tripId)); // Use packing list endpoint
-      // Filter items by the current bag's ID and map status
-      const filteredItems = response.data
-        .filter(packingItem => packingItem.item && packingItem.bag.id === bag.id) // Filter by bag.id from packingItem
-        .map(packingItem => ({
-          // Map PackingItem to TripItem structure
-          trip_id: packingItem.trip_id,
-          item_id: packingItem.item_id,
-          quantity: packingItem.quantity,
-          status: packingItem.status,
-          bag_ids: [packingItem.bag.id], // Assuming for display, an item in this bag has this bag_id
-          created_at: packingItem.created_at,
-          updated_at: packingItem.updated_at,
-          item: packingItem.item,
-        }));
+      const response = await packingRepo.listPacking(tripId);
+      const filteredItems = response.filter(packingItem => packingItem.item && packingItem.bag.id === bag.id);
       setItems(filteredItems);
     } catch (error) {
       console.error(`Failed to fetch items for bag ${bag.name}:`, error);
       toast.error(`Failed to load items for ${bag.name}.`);
-      setItems([]); // Ensure items is always an array on error
+      setItems([]);
     } finally {
       setIsLoading(false);
     }
@@ -210,15 +209,15 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
 
   useEffect(() => { refresh(); }, [bag.id, refresh]);
 
-  const startEditing = (item: TripItem) => {
-    setEditingItemId(item.id);
+  const startEditing = (item: Packing) => {
+    setEditingItemId(item.item_id);
     setEditedQuantity(item.quantity);
   };
 
-  const saveEdit = async (itemId: number) => {
+  const saveEdit = async (itemId: number, bagId: number) => {
     setIsLoading(true);
     try {
-      await tripItemsRepo.updateTripItem(parseInt(tripId), itemId, { quantity: editedQuantity });
+      await packingRepo.updatePacking(tripId, itemId, bagId, { quantity: editedQuantity });
       toast.success("Item quantity updated!");
       setEditingItemId(null);
       onChange();
@@ -234,13 +233,13 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
     setEditingItemId(null);
   };
 
-  const handleStatusChange = async (itemId: number, newStatus: ItemStatus) => {
+  const handleStatusChange = async (itemId: number, bagId: number, newStatus: ItemStatus) => {
     setIsLoading(true);
     try {
-      await tripItemsRepo.updateTripItem(parseInt(tripId), itemId, { status: newStatus });
+      await packingRepo.updatePacking(tripId, itemId, bagId, { status: newStatus });
       toast.success("Item status updated!");
-      refresh(); // Refresh to get updated data
-      onChange(); // Refresh overview
+      refresh();
+      onChange();
     } catch (error) {
       console.error("Failed to update item status:", error);
       toast.error("Failed to update item status.");
@@ -250,11 +249,11 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
   };
 
 
-  const handleDeleteItem = async (itemId: number) => {
+  const handleDeleteItem = async (itemId: number, bagId: number) => {
     setIsLoading(true);
     try {
-      await tripItemsRepo.removeTripItem(parseInt(tripId), itemId);
-      setItems((prev) => prev.filter((item) => item.id !== itemId));
+      await packingRepo.deletePacking(tripId, itemId, bagId);
+      setItems((prev) => prev.filter((item) => item.item_id !== itemId));
       toast.success("Item deleted!");
       onChange();
     } catch (error) {
@@ -280,16 +279,16 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
               <div className="flex items-center gap-3">
                 <Badge variant={badgeVariant(it.status)}>{it.status.replace("_", " ")}</Badge>
                 <span className="font-medium">{it.item.name}</span>
-                {editingItemId === it.id ? (
+                {editingItemId === it.item_id ? (
                   <Input type="number" min={1} value={editedQuantity} onChange={(e) => setEditedQuantity(Number(e.target.value))} className="w-16" disabled={isLoading || boardLoading} />
                 ) : (
                   <span className="text-muted-foreground">×{it.quantity}</span>
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {editingItemId === it.id ? (
+                {editingItemId === it.item_id ? (
                   <>
-                    <Button variant="outline" size="sm" onClick={() => saveEdit(it.id)} disabled={isLoading || boardLoading || editedQuantity < 1}>
+                    <Button variant="outline" size="sm" onClick={() => saveEdit(it.item_id, it.bag_id)} disabled={isLoading || boardLoading || editedQuantity < 1}>
                       {isLoading ? "Saving..." : "Save"}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={cancelEdit} disabled={isLoading || boardLoading}>
@@ -301,7 +300,7 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
                     Edit
                   </Button>
                 )}
-                <Select value={it.status} onValueChange={(v) => handleStatusChange(it.id, v as ItemStatus)} disabled={isLoading || boardLoading}>
+                <Select value={it.status} onValueChange={(v) => handleStatusChange(it.item_id, it.bag_id, v as ItemStatus)} disabled={isLoading || boardLoading}>
                   <SelectTrigger className="w-[130px]"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value={ItemStatus.UNPACKED}>UNPACKED</SelectItem>
@@ -309,7 +308,7 @@ function BagColumn({ bag, filter, onChange, isLoading: boardLoading, tripId }: {
                     <SelectItem value={ItemStatus.TO_BUY}>TO BUY</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="ghost" onClick={() => handleDeleteItem(it.id)} disabled={isLoading || boardLoading}>Delete</Button>
+                <Button variant="ghost" onClick={() => handleDeleteItem(it.item_id, it.bag_id)} disabled={isLoading || boardLoading}>Delete</Button>
               </div>
             </li>
           ))}
