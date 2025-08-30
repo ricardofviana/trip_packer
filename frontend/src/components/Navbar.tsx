@@ -1,36 +1,72 @@
+"use client";
+
+import * as React from "react";
 import { Link } from "react-router-dom";
+
 import { cn } from "@/lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 export function Navbar() {
   return (
-    <nav className="bg-primary text-primary-foreground p-4">
-      <ul className="flex space-x-4">
-        <li>
-          <Link to="/" className={cn("hover:underline")}>
-            Home
+    <NavigationMenu>
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <Link to="/" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Home
+            </NavigationMenuLink>
           </Link>
-        </li>
-        <li>
-          <Link to="/trips" className={cn("hover:underline")}>
-            Trips
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to="/trips" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Trips
+            </NavigationMenuLink>
           </Link>
-        </li>
-        <li>
-          <Link to="/items" className={cn("hover:underline")}>
-            Items
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuTrigger>Templates</NavigationMenuTrigger>
+          <NavigationMenuContent>
+            <ul className="grid w-[300px] gap-4 p-4">
+              <li>
+                <NavigationMenuLink asChild>
+                  <Link to="/items">
+                    <div className="font-medium">Item Templates</div>
+                    <div className="text-muted-foreground">
+                      Create and manage item templates.
+                    </div>
+                  </Link>
+                </NavigationMenuLink>
+              </li>
+              <li>
+                <NavigationMenuLink asChild>
+                  <Link to="/bags">
+                    <div className="font-medium">Bag Templates</div>
+                    <div className="text-muted-foreground">
+                      Create and manage bag templates.
+                    </div>
+                  </Link>
+                </NavigationMenuLink>
+              </li>
+            </ul>
+          </NavigationMenuContent>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <Link to="/learn-more" legacyBehavior passHref>
+            <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+              Learn More
+            </NavigationMenuLink>
           </Link>
-        </li>
-        <li>
-          <Link to="/bags" className={cn("hover:underline")}>
-            Bags
-          </Link>
-        </li>
-        <li>
-          <Link to="/learn-more" className={cn("hover:underline")}>
-            Learn More
-          </Link>
-        </li>
-      </ul>
-    </nav>
+        </NavigationMenuItem>
+      </NavigationMenuList>
+    </NavigationMenu>
   );
 }

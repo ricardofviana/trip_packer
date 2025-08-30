@@ -8,16 +8,16 @@ table_registry = registry()
 
 
 class ItemStatus(str, Enum):
-    UNPACKED = "UNPACKED"
-    PACKED = "PACKED"
-    TO_BUY = "TO_BUY"
+    UNPACKED = "Unpacked"
+    PACKED = "Packed"
+    TO_BUY = "To buy"
 
 
 class LuggageType(str, Enum):
-    BACKPACK = "BACKPACK"
-    CARRY_ON = "CARRY_ON"
-    CHECKED_MEDIUM = "CHECKED_MEDIUM"
-    CHECKED_LARGE = "CHECKED_LARGE"
+    BACKPACK = "Backpack"
+    CARRY_ON = "Carry on"
+    CHECKED_MEDIUM = "Checked medium (23kg)"
+    CHECKED_LARGE = "Checked large (32kg)"
 
 
 class ItemCategory(str, Enum):

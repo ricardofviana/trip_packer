@@ -1,18 +1,16 @@
 export type ID = number;
 
 export enum ItemStatus {
-  UNPACKED = "UNPACKED",
-  PACKED = "PACKED",
-  TO_BUY = "TO_BUY",
+  UNPACKED = "Unpacked",
+  PACKED = "Packed",
+  TO_BUY = "To buy",
 }
 
 export enum BagType {
-  CHECKED = "CHECKED",
-  CARRY_ON = "CARRY_ON",
-  BACKPACK = "BACKPACK",
-  DUFFEL = "DUFFEL",
-  TOTE = "TOTE",
-  OTHER = "OTHER",
+  BACKPACK = "Backpack",
+  CARRY_ON = "Carry on",
+  CHECKED_MEDIUM = "Checked medium (23kg)",
+  CHECKED_LARGE = "Checked large (32kg)"
 }
 
 export enum ItemCategory {
